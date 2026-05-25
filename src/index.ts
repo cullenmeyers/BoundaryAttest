@@ -1,0 +1,164 @@
+#!/usr/bin/env node
+
+import { resolve } from "node:path";
+import { latestReceiptHash, sortedReceipts } from "./chain.js";
+import { sha256 } from "./hash.js";
+import { loadPublicKey, setupKeys } from "./keys.js";
+import {
+  createSignedReceipt,
+  listReceiptPaths,
+  parseReceipt,
+  receiptHash,
+  writeReceipt,
+  type Receipt,
+} from "./receipts.js";
+import { verifyReceipt } from "./signing.js";
+import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH } from "./paths.js";
+
+const AGENT_ID = "agentreceipt-demo-agent";
+
+type DemoToolCall = {
+  tool: string;
+  input: unknown;
+  output: unknown;
+};
+
+function commandSetup(): void {
+  const result = setupKeys();
+  console.log(result.created ? "Created local signing key." : "Local signing key already exists.");
+  console.log(`Private key: ${PRIVATE_KEY_PATH}`);
+  console.log(`Public key:  ${PUBLIC_KEY_PATH}`);
+  console.log(`Public key id: ${result.publicKeyId}`);
+}
+
+function commandDemo(): void {
+  const keyResult = setupKeys();
+  const calls: DemoToolCall[] = [
+    {
+      tool: "email.draft",
+      input: { to: "ada@example.com", subject: "Project check-in" },
+      output: { draft_id: "draft_local_001", status: "created" },
+    },
+    {
+      tool: "calendar.create_event",
+      input: { title: "Project check-in", starts_at: "2026-05-26T10:00:00-10:00" },
+      output: { event_id: "event_local_001", status: "created" },
+    },
+    {
+      tool: "file.read",
+      input: { path: "./notes/project.txt" },
+      output: { bytes: 128, preview_hash: sha256("local demo notes") },
+    },
+  ];
+
+  let previousHash = latestReceiptHash(sortedReceipts(listReceiptPaths()));
+  const created = calls.map((call, index) => {
+    const receipt = createSignedReceipt({
+      agentId: AGENT_ID,
+      tool: call.tool,
+      actionStatus: "success",
+      input: call.input,
+      output: call.output,
+      previousReceiptHash: previousHash,
+      timestamp: new Date(Date.now() + index).toISOString(),
+    });
+    const receiptPath = writeReceipt(receipt, index + 1);
+    const signatureValid = verifyReceipt(receipt, keyResult.publicKeyPem);
+    previousHash = receiptHash(receipt);
+    return { receipt, receiptPath, signatureValid, position: index + 1 };
+  });
+
+  console.log(keyResult.created ? "Created local signing key." : "Using existing local signing key.");
+  console.log("Demo receipts created:");
+  for (const item of created) {
+    console.log(
+      `${item.position}. ${item.receipt.tool} | ${item.receiptPath} | signature ${
+        item.signatureValid ? "valid" : "invalid"
+      } | chain position ${item.position}/${created.length}`,
+    );
+  }
+}
+
+function commandVerify(receiptPathArg: string | undefined): void {
+  if (!receiptPathArg) {
+    throw new Error("Usage: npm run verify -- <receiptPath>");
+  }
+
+  const receiptPath = resolve(receiptPathArg);
+  const receipt = parseReceipt(receiptPath);
+  const valid = verifyReceipt(receipt);
+
+  console.log(`Receipt: ${receiptPath}`);
+  console.log(`Tool: ${receipt.tool}`);
+  console.log(`Signature valid: ${valid ? "yes" : "no"}`);
+  console.log(valid ? "Receipt is valid." : "Receipt is NOT valid.");
+}
+
+function commandChain(): void {
+  const publicKeyPem = loadPublicKey();
+  const receipts = sortedReceipts(listReceiptPaths());
+
+  if (receipts.length === 0) {
+    console.log("No receipts found in ./receipts/.");
+    return;
+  }
+
+  let intact = true;
+  let previousHash: string | null = null;
+
+  console.log("Receipt chain:");
+  receipts.forEach((item, index) => {
+    const signatureValid = verifyReceipt(item.receipt, publicKeyPem);
+    const linkValid = item.receipt.previous_receipt_hash === previousHash;
+    if (!signatureValid || !linkValid) {
+      intact = false;
+    }
+
+    console.log(
+      `${index + 1}. ${item.receipt.tool} | ${item.receiptPath} | signature ${
+        signatureValid ? "valid" : "invalid"
+      } | previous link ${linkValid ? "valid" : "invalid"}`,
+    );
+
+    previousHash = receiptHash(item.receipt);
+  });
+
+  console.log(intact ? "Chain is intact." : "Chain is NOT intact.");
+}
+
+function main(): void {
+  const [command, receiptPath] = process.argv.slice(2);
+
+  try {
+    switch (command) {
+      case "setup":
+        commandSetup();
+        break;
+      case "demo":
+        commandDemo();
+        break;
+      case "verify":
+        commandVerify(receiptPath);
+        break;
+      case "chain":
+        commandChain();
+        break;
+      default:
+        console.log("AgentReceipt local CLI");
+        console.log("Commands:");
+        console.log("  npm run setup");
+        console.log("  npm run demo");
+        console.log("  npm run verify -- <receiptPath>");
+        console.log("  npm run chain");
+    }
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
+}
+
+main();
+
+export { withAgentReceipt } from "./withAgentReceipt.js";
+export type { ErrorWithAgentReceipt, WithAgentReceiptOptions, WithAgentReceiptResult } from "./withAgentReceipt.js";
+export type { Receipt } from "./receipts.js";

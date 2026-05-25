@@ -1,0 +1,35 @@
+{
+  "name": "agentreceipt",
+  "version": "0.1.0",
+  "description": "Local-first tamper-evident receipts for AI agent tool calls.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "agentreceipt": "dist/src/index.js"
+  },
+  "exports": {
+    ".": "./dist/src/public.js"
+  },
+  "types": "./dist/src/public.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "setup": "node dist/src/index.js setup",
+    "demo": "node dist/src/index.js demo",
+    "verify": "node dist/src/index.js verify",
+    "chain": "node dist/src/index.js chain",
+    "example:wrap": "node dist/examples/wrap-fake-tool.js",
+    "example:mcp": "node dist/examples/mcp-style-demo.js",
+    "example:mcp-real": "node dist/examples/mcp-real-demo.js",
+    "reset:demo": "node scripts/reset-demo.mjs",
+    "reset:all": "node scripts/reset-all.mjs",
+    "demo:clean": "npm run reset:demo && npm run build && npm run example:mcp-real && npm run chain"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  }
+}
