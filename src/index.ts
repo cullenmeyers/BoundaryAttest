@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { resolve } from "node:path";
-import { latestReceiptHash, sortedReceipts } from "./chain.js";
+import { latestReceiptHash, sortedReceipts, verifyRetainedChain, verifyStrictChain, type ChainVerificationResult } from "./chain.js";
 import { sha256 } from "./hash.js";
 import { loadPublicKey, setupKeys } from "./keys.js";
 import {
@@ -12,6 +12,7 @@ import {
   writeReceipt,
   type Receipt,
 } from "./receipts.js";
+import { pruneReceipts } from "./retention.js";
 import { verifyReceipt } from "./signing.js";
 import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH } from "./paths.js";
 
@@ -94,6 +95,16 @@ function commandVerify(receiptPathArg: string | undefined): void {
   console.log(valid ? "Receipt is valid." : "Receipt is NOT valid.");
 }
 
+function printChainResult(result: ChainVerificationResult): void {
+  result.items.forEach((item, index) => {
+    console.log(
+      `${index + 1}. ${item.receipt.tool} | ${item.receiptPath} | signature ${
+        item.signatureValid ? "valid" : "invalid"
+      } | previous link ${item.linkValid ? "valid" : "invalid"}`,
+    );
+  });
+}
+
 function commandChain(): void {
   const publicKeyPem = loadPublicKey();
   const receipts = sortedReceipts(listReceiptPaths());
@@ -103,27 +114,50 @@ function commandChain(): void {
     return;
   }
 
-  let intact = true;
-  let previousHash: string | null = null;
+  const result = verifyStrictChain(receipts, publicKeyPem);
 
   console.log("Receipt chain:");
-  receipts.forEach((item, index) => {
-    const signatureValid = verifyReceipt(item.receipt, publicKeyPem);
-    const linkValid = item.receipt.previous_receipt_hash === previousHash;
-    if (!signatureValid || !linkValid) {
-      intact = false;
-    }
+  printChainResult(result);
+  console.log(result.intact ? "Chain is intact." : "Chain is NOT intact.");
+  if (!result.intact) {
+    process.exitCode = 1;
+  }
+}
 
-    console.log(
-      `${index + 1}. ${item.receipt.tool} | ${item.receiptPath} | signature ${
-        signatureValid ? "valid" : "invalid"
-      } | previous link ${linkValid ? "valid" : "invalid"}`,
-    );
+function commandChainRetained(): void {
+  const publicKeyPem = loadPublicKey();
+  const receipts = sortedReceipts(listReceiptPaths());
 
-    previousHash = receiptHash(item.receipt);
-  });
+  if (receipts.length === 0) {
+    console.log("No receipts found in ./receipts/.");
+    return;
+  }
 
-  console.log(intact ? "Chain is intact." : "Chain is NOT intact.");
+  const result = verifyRetainedChain(receipts, publicKeyPem);
+
+  console.log("Retained receipt chain segment:");
+  printChainResult(result);
+  console.log(
+    result.intact
+      ? "Retained chain segment is intact. Earlier receipts may have been pruned."
+      : "Retained chain segment is NOT intact.",
+  );
+  if (!result.intact) {
+    process.exitCode = 1;
+  }
+}
+
+function commandPrune(): void {
+  const result = pruneReceipts();
+
+  console.log("Receipt pruning complete.");
+  console.log(`Receipts scanned: ${result.scanned}`);
+  console.log(`Receipts deleted by age: ${result.deletedByAge}`);
+  console.log(`Receipts deleted by count: ${result.deletedByCount}`);
+  console.log(`Receipts retained: ${result.retained}`);
+  console.log(`maxAgeDays used: ${result.maxAgeDays}`);
+  console.log(`maxCount used: ${result.maxCount}`);
+  console.log("WARNING: pruning removes historical chain context. Full historical chain verification may fail.");
 }
 
 function main(): void {
@@ -143,6 +177,12 @@ function main(): void {
       case "chain":
         commandChain();
         break;
+      case "chain:retained":
+        commandChainRetained();
+        break;
+      case "prune":
+        commandPrune();
+        break;
       default:
         console.log("AgentReceipt local CLI");
         console.log("Commands:");
@@ -150,6 +190,8 @@ function main(): void {
         console.log("  npm run demo");
         console.log("  npm run verify -- <receiptPath>");
         console.log("  npm run chain");
+        console.log("  npm run chain:retained");
+        console.log("  npm run prune");
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

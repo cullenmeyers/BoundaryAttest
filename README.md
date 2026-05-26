@@ -66,6 +66,8 @@ npm run example:mcp
 npm run example:mcp-real
 npm run verify -- <receiptPath>
 npm run chain
+npm run chain:retained
+npm run prune
 npm run reset:demo
 npm run reset:all
 npm run demo:clean
@@ -178,6 +180,25 @@ await withAgentReceipt({
 ```
 
 Selective capture reduces I/O and storage bloat. TTL/retention cleanup is not implemented yet.
+
+## Retention and pruning
+
+AgentReceipt writes local JSON receipt files to `./receipts/`. Use `npm run prune` to prevent receipt folders from growing forever.
+
+By default, pruning keeps receipts from the last 30 days and keeps at most 1000 receipts. You can override those values with `.agentreceipt/config.json`:
+
+```json
+{
+  "retention": {
+    "maxAgeDays": 30,
+    "maxCount": 1000
+  }
+}
+```
+
+Pruning deletes local receipt history. It never deletes `.agentreceipt/keys`, but it can remove historical chain context because later retained receipts may point to earlier receipts that no longer exist.
+
+After pruning, full historical chain verification with `npm run chain` may fail. Use `npm run chain:retained` to verify the remaining segment. Retained-chain verification checks every retained receipt signature and checks that every retained receipt after the first links correctly, while allowing the first retained receipt to point to a pruned earlier receipt.
 
 ## MCP-Shaped Usage
 

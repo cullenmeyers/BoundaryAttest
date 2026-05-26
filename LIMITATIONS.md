@@ -16,7 +16,15 @@ Recording every tool call can create I/O and storage bloat.
 
 The MVP supports selective receipt capture with `receiptPolicy`.
 
-TTL/retention cleanup is not implemented yet.
+Pruning deletes local receipt files.
+
+Pruning can remove historical chain context.
+
+AgentReceipt does not yet support permanent archival/checkpointing.
+
+Retained-chain verification only proves the remaining receipt segment is intact.
+
+Hosted/archival storage is not implemented.
 
 `receiptPolicy` is not a permission system and does not approve or block actions.
 
