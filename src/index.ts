@@ -203,4 +203,6 @@ main();
 
 export { withAgentReceipt } from "./withAgentReceipt.js";
 export type { ErrorWithAgentReceipt, WithAgentReceiptOptions, WithAgentReceiptResult } from "./withAgentReceipt.js";
+export { ConsoleReceiptSink, LocalFileReceiptSink, MemoryReceiptSink } from "./sinks.js";
+export type { AgentReceipt, ReceiptSink, ReceiptSinkResult } from "./sinks.js";
 export type { Receipt } from "./receipts.js";

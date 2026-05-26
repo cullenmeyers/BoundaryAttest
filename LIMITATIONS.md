@@ -26,6 +26,16 @@ Retained-chain verification only proves the remaining receipt segment is intact.
 
 Hosted/archival storage is not implemented.
 
+Custom sinks are responsible for their own storage durability.
+
+Local chain verification only covers local file receipts.
+
+AgentReceipt does not yet support cross-sink or global chain verification.
+
+No vendor integrations are included yet.
+
+Console and memory sinks are for demo/testing, not durable audit storage.
+
 `receiptPolicy` is not a permission system and does not approve or block actions.
 
 AgentReceipt works where a developer can wrap or intercept the tool-call boundary.

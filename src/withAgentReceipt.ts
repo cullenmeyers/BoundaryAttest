@@ -4,10 +4,10 @@ import { setupKeys } from "./keys.js";
 import {
   createSignedReceipt,
   listReceiptPaths,
-  writeReceipt,
   type Receipt,
   type ReceiptPolicy,
 } from "./receipts.js";
+import { LocalFileReceiptSink, type ReceiptSink, type ReceiptSinkResult } from "./sinks.js";
 
 export type WithAgentReceiptOptions<T> = {
   agentId: string;
@@ -15,6 +15,7 @@ export type WithAgentReceiptOptions<T> = {
   input: unknown;
   toolMetadata?: unknown;
   receiptPolicy?: ReceiptPolicy;
+  receiptSink?: ReceiptSink;
   run: () => Promise<T>;
 };
 
@@ -22,11 +23,13 @@ export type WithAgentReceiptResult<T> = {
   result: T;
   receipt: Receipt | null;
   receiptPath: string | null;
+  sinkResult: ReceiptSinkResult | null;
 };
 
 export type AgentReceiptErrorDetails = {
   receipt: Receipt;
-  receiptPath: string;
+  receiptPath: string | null;
+  sinkResult: ReceiptSinkResult;
 };
 
 export type ErrorWithAgentReceipt = Error & {
@@ -54,11 +57,13 @@ export async function withAgentReceipt<T>(
 
   if (receiptPolicy.mode === "off") {
     const result = await options.run();
-    return { result, receipt: null, receiptPath: null };
+    return { result, receipt: null, receiptPath: null, sinkResult: null };
   }
 
+  const receiptSink = options.receiptSink ?? new LocalFileReceiptSink();
   setupKeys();
-  const previousReceiptHash = latestReceiptHash(sortedReceipts(listReceiptPaths()));
+  const previousReceiptHash =
+    receiptSink instanceof LocalFileReceiptSink ? latestReceiptHash(sortedReceipts(listReceiptPaths())) : null;
 
   try {
     const result = await options.run();
@@ -72,9 +77,10 @@ export async function withAgentReceipt<T>(
       receiptPolicy,
       previousReceiptHash,
     });
-    const receiptPath = writeReceipt(receipt);
+    const sinkResult = await receiptSink.write(receipt);
+    const receiptPath = sinkResult.receiptPath ?? null;
 
-    return { result, receipt, receiptPath };
+    return { result, receipt, receiptPath, sinkResult };
   } catch (error) {
     const receipt = createSignedReceipt({
       agentId: options.agentId,
@@ -86,10 +92,11 @@ export async function withAgentReceipt<T>(
       receiptPolicy,
       previousReceiptHash,
     });
-    const receiptPath = writeReceipt(receipt);
+    const sinkResult = await receiptSink.write(receipt);
+    const receiptPath = sinkResult.receiptPath ?? null;
 
     if (error && typeof error === "object") {
-      (error as ErrorWithAgentReceipt).agentReceipt = { receipt, receiptPath };
+      (error as ErrorWithAgentReceipt).agentReceipt = { receipt, receiptPath, sinkResult };
     }
 
     throw error;

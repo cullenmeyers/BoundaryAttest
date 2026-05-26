@@ -62,6 +62,7 @@ npm run build
 npm run demo:clean
 npm run demo
 npm run example:wrap
+npm run example:sink
 npm run example:mcp
 npm run example:mcp-real
 npm run verify -- <receiptPath>
@@ -179,7 +180,45 @@ await withAgentReceipt({
 });
 ```
 
-Selective capture reduces I/O and storage bloat. TTL/retention cleanup is not implemented yet.
+Selective capture reduces I/O and storage bloat. Retention pruning can also delete older local receipt files when you no longer need full local history.
+
+## Pluggable receipt sinks
+
+AgentReceipt is not meant to force a new logging stack. Local JSON receipts are the default, but developers can provide a custom receipt sink to route signed receipts to their own storage, audit, or observability system.
+
+Built-in sinks:
+
+- `LocalFileReceiptSink`: the default. Writes receipt JSON to `./receipts/` and is the only sink covered by local chain verification.
+- `ConsoleReceiptSink`: prints a short receipt summary to the console. Demo/debug only; it does not write local receipt files.
+- `MemoryReceiptSink`: stores receipts in memory for tests/examples. It does not write local receipt files.
+
+```ts
+import { withAgentReceipt, type ReceiptSink } from "agentreceipt";
+
+const receiptSink: ReceiptSink = {
+  name: "custom-demo",
+  async write(receipt) {
+    console.log(`Custom sink received receipt: ${receipt.receipt_id}`);
+    return {
+      receiptPath: null,
+      receiptId: receipt.receipt_id,
+      sinkName: this.name
+    };
+  }
+};
+
+const wrapped = await withAgentReceipt({
+  agentId: "demo-agent",
+  tool: "custom.route",
+  input: { message: "route this receipt" },
+  receiptSink,
+  run: async () => ({ routed: true })
+});
+```
+
+If `receiptSink` is omitted, AgentReceipt uses `LocalFileReceiptSink` and preserves the existing local file behavior. If `receiptPolicy.mode` is `"off"`, AgentReceipt does not create a receipt and does not call the sink.
+
+Local chain verification applies only to receipts written by `LocalFileReceiptSink`. Custom sinks are useful for integration, but external durability and verification are the developer's responsibility for now. AgentReceipt does not yet support cross-sink or global chain verification.
 
 ## Retention and pruning
 

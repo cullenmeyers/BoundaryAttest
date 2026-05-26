@@ -20,6 +20,7 @@
     "chain:retained": "node dist/src/index.js chain:retained",
     "prune": "node dist/src/index.js prune",
     "example:wrap": "node dist/examples/wrap-fake-tool.js",
+    "example:sink": "node dist/examples/custom-sink-demo.js",
     "example:mcp": "node dist/examples/mcp-style-demo.js",
     "example:mcp-real": "node dist/examples/mcp-real-demo.js",
     "reset:demo": "node scripts/reset-demo.mjs",
