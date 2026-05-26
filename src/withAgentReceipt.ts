@@ -1,20 +1,27 @@
 import { latestReceiptHash, sortedReceipts } from "./chain.js";
 import { hashValue } from "./hash.js";
 import { setupKeys } from "./keys.js";
-import { createSignedReceipt, listReceiptPaths, writeReceipt, type Receipt } from "./receipts.js";
+import {
+  createSignedReceipt,
+  listReceiptPaths,
+  writeReceipt,
+  type Receipt,
+  type ReceiptPolicy,
+} from "./receipts.js";
 
 export type WithAgentReceiptOptions<T> = {
   agentId: string;
   tool: string;
   input: unknown;
   toolMetadata?: unknown;
+  receiptPolicy?: ReceiptPolicy;
   run: () => Promise<T>;
 };
 
 export type WithAgentReceiptResult<T> = {
   result: T;
-  receipt: Receipt;
-  receiptPath: string;
+  receipt: Receipt | null;
+  receiptPath: string | null;
 };
 
 export type AgentReceiptErrorDetails = {
@@ -43,6 +50,13 @@ function errorFingerprint(error: unknown): unknown {
 export async function withAgentReceipt<T>(
   options: WithAgentReceiptOptions<T>,
 ): Promise<WithAgentReceiptResult<T>> {
+  const receiptPolicy = options.receiptPolicy ?? { mode: "required", reason: "default" };
+
+  if (receiptPolicy.mode === "off") {
+    const result = await options.run();
+    return { result, receipt: null, receiptPath: null };
+  }
+
   setupKeys();
   const previousReceiptHash = latestReceiptHash(sortedReceipts(listReceiptPaths()));
 
@@ -55,6 +69,7 @@ export async function withAgentReceipt<T>(
       input: options.input,
       output: result,
       toolMetadata: options.toolMetadata,
+      receiptPolicy,
       previousReceiptHash,
     });
     const receiptPath = writeReceipt(receipt);
@@ -68,6 +83,7 @@ export async function withAgentReceipt<T>(
       input: options.input,
       error: errorFingerprint(error),
       toolMetadata: options.toolMetadata,
+      receiptPolicy,
       previousReceiptHash,
     });
     const receiptPath = writeReceipt(receipt);

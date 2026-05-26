@@ -8,6 +8,11 @@ import { signReceiptPayload } from "./signing.js";
 
 export type ActionStatus = "success" | "failure" | "executed" | "failed";
 
+export type ReceiptPolicy = {
+  mode: "required" | "off";
+  reason?: string;
+};
+
 export type ReceiptPayload = {
   receipt_id: string;
   agent_id: string;
@@ -20,6 +25,7 @@ export type ReceiptPayload = {
   public_key_id: string;
   error_hash?: string;
   tool_metadata_hash?: string;
+  receipt_policy?: ReceiptPolicy;
 };
 
 export type Receipt = ReceiptPayload & {
@@ -34,6 +40,7 @@ export type CreateReceiptOptions = {
   output?: unknown;
   error?: unknown;
   toolMetadata?: unknown;
+  receiptPolicy?: ReceiptPolicy;
   previousReceiptHash: string | null;
   timestamp?: string;
 };
@@ -44,6 +51,7 @@ export function receiptHash(receipt: Receipt): string {
 
 export function createSignedReceipt(options: CreateReceiptOptions): Receipt {
   const { privateKeyPem, publicKeyId } = setupKeys();
+  const receiptPolicy = options.receiptPolicy ?? { mode: "required", reason: "default" };
   const payload: ReceiptPayload = {
     receipt_id: randomUUID(),
     agent_id: options.agentId,
@@ -54,6 +62,9 @@ export function createSignedReceipt(options: CreateReceiptOptions): Receipt {
     timestamp: options.timestamp ?? new Date().toISOString(),
     previous_receipt_hash: options.previousReceiptHash,
     public_key_id: publicKeyId,
+    receipt_policy: receiptPolicy.reason
+      ? { mode: receiptPolicy.mode, reason: receiptPolicy.reason }
+      : { mode: receiptPolicy.mode },
   };
 
   if (options.error !== undefined) {

@@ -12,6 +12,14 @@ Receipt hashes prove the same input/output can be matched later, not that the ac
 
 Failed receipts store `error_hash` by default, not raw private error content.
 
+Recording every tool call can create I/O and storage bloat.
+
+The MVP supports selective receipt capture with `receiptPolicy`.
+
+TTL/retention cleanup is not implemented yet.
+
+`receiptPolicy` is not a permission system and does not approve or block actions.
+
 AgentReceipt works where a developer can wrap or intercept the tool-call boundary.
 
 It does not automatically attach to closed agent platforms.

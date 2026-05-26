@@ -20,6 +20,27 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(success.result, null, 2));
   console.log(`Successful receipt path: ${success.receiptPath}`);
 
+  const noisy = await withAgentReceipt({
+    agentId: "demo-agent",
+    tool: "debug.token_count",
+    input: {
+      text: "short local demo string",
+    },
+    receiptPolicy: {
+      mode: "off",
+      reason: "noisy low-value diagnostic call",
+    },
+    run: async () => {
+      return {
+        tokens: 4,
+      };
+    },
+  });
+
+  console.log("Noisy result:");
+  console.log(JSON.stringify(noisy.result, null, 2));
+  console.log(`Noisy receipt path: ${noisy.receiptPath ?? "none (receiptPolicy.mode off)"}`);
+
   try {
     await withAgentReceipt({
       agentId: "demo-agent",

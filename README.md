@@ -107,6 +107,10 @@ Because `reset:all` deletes the local key material, old local receipts may becom
   "output_hash": "fbb5905d5cf1...",
   "timestamp": "2026-05-25T20:14:33.100Z",
   "previous_receipt_hash": null,
+  "receipt_policy": {
+    "mode": "required",
+    "reason": "default"
+  },
   "signature": "base64-ed25519-signature",
   "public_key_id": "sha256:abc123..."
 }
@@ -140,6 +144,40 @@ const { result, receipt, receiptPath } = await withAgentReceipt({
 Successful receipts record `action_status: "executed"`, `input_hash`, `output_hash`, `previous_receipt_hash`, `signature`, and `public_key_id`.
 
 Failed receipts record `action_status: "failed"`, `input_hash`, `output_hash: null`, `error_hash`, `previous_receipt_hash`, `signature`, and `public_key_id`. Failed receipts do not store the full raw error message by default.
+
+## Selective Receipt Capture
+
+AgentReceipt is not meant to record every low-value tool call. By default, `withAgentReceipt` treats missing policy as:
+
+```ts
+{ mode: "required", reason: "default" }
+```
+
+Use `receiptPolicy.mode: "required"` for actions where proof matters.
+
+```ts
+await withAgentReceipt({
+  agentId: "demo-agent",
+  tool: "email.draft",
+  input: { to: "client@example.com" },
+  receiptPolicy: { mode: "required", reason: "customer-facing draft" },
+  run: async () => ({ draftId: "draft_123" })
+});
+```
+
+Use `receiptPolicy.mode: "off"` for noisy or low-value calls. In this mode AgentReceipt runs the tool, creates no receipt file, and returns `receipt: null` and `receiptPath: null`. If the tool fails, it rethrows the original error without creating a failed receipt.
+
+```ts
+await withAgentReceipt({
+  agentId: "demo-agent",
+  tool: "debug.token_count",
+  input: { text: "short local demo string" },
+  receiptPolicy: { mode: "off", reason: "noisy diagnostic call" },
+  run: async () => ({ tokens: 4 })
+});
+```
+
+Selective capture reduces I/O and storage bloat. TTL/retention cleanup is not implemented yet.
 
 ## MCP-Shaped Usage
 

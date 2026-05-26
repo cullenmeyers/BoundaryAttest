@@ -37,6 +37,10 @@ export async function withMcpReceipt<T>(
     run: options.run,
   });
 
+  if (!wrapped.receipt || !wrapped.receiptPath) {
+    throw new Error("MCP receipt was unexpectedly disabled.");
+  }
+
   return {
     mcpResult: wrapped.result,
     receipt: wrapped.receipt,
