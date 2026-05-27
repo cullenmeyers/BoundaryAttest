@@ -13,6 +13,7 @@
   "types": "./dist/src/public.d.ts",
   "scripts": {
     "build": "tsc",
+    "test": "npm run build && node --test dist/tests/*.test.js",
     "setup": "node dist/src/index.js setup",
     "demo": "node dist/src/index.js demo",
     "verify": "node dist/src/index.js verify",
@@ -23,6 +24,7 @@
     "example:sink": "node dist/examples/custom-sink-demo.js",
     "example:mcp": "node dist/examples/mcp-style-demo.js",
     "example:mcp-real": "node dist/examples/mcp-real-demo.js",
+    "example:mcp-server": "node dist/examples/mcp-server-receipt-demo.js",
     "reset:demo": "node scripts/reset-demo.mjs",
     "reset:all": "node scripts/reset-all.mjs",
     "demo:clean": "npm run reset:demo && npm run build && npm run example:mcp-real && npm run chain"

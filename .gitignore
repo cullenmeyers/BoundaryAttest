@@ -2,3 +2,4 @@ node_modules
 dist
 .agentreceipt
 receipts
+.tmp-tests

@@ -8,6 +8,8 @@ import { signReceiptPayload } from "./signing.js";
 
 export type ActionStatus = "success" | "failure" | "executed" | "failed";
 
+export type ReceiptRole = "client_observed" | "server_attested";
+
 export type ReceiptPolicy = {
   mode: "required" | "off";
   reason?: string;
@@ -23,6 +25,7 @@ export type ReceiptPayload = {
   timestamp: string;
   previous_receipt_hash: string | null;
   public_key_id: string;
+  receipt_role?: ReceiptRole;
   error_hash?: string;
   tool_metadata_hash?: string;
   receipt_policy?: ReceiptPolicy;
@@ -41,6 +44,7 @@ export type CreateReceiptOptions = {
   error?: unknown;
   toolMetadata?: unknown;
   receiptPolicy?: ReceiptPolicy;
+  receiptRole?: ReceiptRole;
   previousReceiptHash: string | null;
   timestamp?: string;
 };
@@ -62,6 +66,7 @@ export function createSignedReceipt(options: CreateReceiptOptions): Receipt {
     timestamp: options.timestamp ?? new Date().toISOString(),
     previous_receipt_hash: options.previousReceiptHash,
     public_key_id: publicKeyId,
+    receipt_role: options.receiptRole ?? "client_observed",
     receipt_policy: receiptPolicy.reason
       ? { mode: receiptPolicy.mode, reason: receiptPolicy.reason }
       : { mode: receiptPolicy.mode },

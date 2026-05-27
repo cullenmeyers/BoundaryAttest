@@ -65,6 +65,7 @@ npm run example:wrap
 npm run example:sink
 npm run example:mcp
 npm run example:mcp-real
+npm run example:mcp-server
 npm run verify -- <receiptPath>
 npm run chain
 npm run chain:retained
@@ -74,10 +75,26 @@ npm run reset:all
 npm run demo:clean
 ```
 
+## Testing
+
+```sh
+npm test
+npm run build
+npm run demo:clean
+```
+
+`npm test` uses Node's built-in test runner. The tests create isolated temporary receipt/key folders under `.tmp-tests/` and do not rely on existing user receipts.
+
 Real local MCP SDK demo:
 
 ```sh
 npm run example:mcp-real
+```
+
+Server-side MCP receipt demo:
+
+```sh
+npm run example:mcp-server
 ```
 
 MCP-shaped educational demo:
@@ -110,6 +127,7 @@ Because `reset:all` deletes the local key material, old local receipts may becom
   "output_hash": "fbb5905d5cf1...",
   "timestamp": "2026-05-25T20:14:33.100Z",
   "previous_receipt_hash": null,
+  "receipt_role": "client_observed",
   "receipt_policy": {
     "mode": "required",
     "reason": "default"
@@ -281,6 +299,16 @@ The demo tools are:
 - `math.add`
 
 This proof-of-concept does not connect to external tools, user data, files, credentials, network services, browsers, email, or calendars. It is experimental and intentionally local-only. Real production MCP support would need more work around deployment, trust boundaries, key handling, and operational security.
+
+## Client-Observed vs Server-Attested Receipts
+
+AgentReceipt receipts can include `receipt_role`.
+
+`client_observed` receipts wrap `client.callTool(...)` or another client-side tool-call boundary. They prove what the client says it sent and what it observed receiving back.
+
+`server_attested` receipts wrap the server-side tool handler. They prove what the server says reached the handler, whether the handler ran, and what the handler returned or threw. This is closer to the source of truth for tool execution and is stronger for third-party proof when the server key and runtime are trusted.
+
+`npm run example:mcp-server` is a local experimental demo using the official MCP TypeScript SDK, in-memory transport, and the safe demo tools `echo.message` and `math.add`. It is not a formal standard or production trust model. See `docs/client-vs-server-receipts.md` for the short version.
 
 ## Does This Work With Any MCP Server?
 

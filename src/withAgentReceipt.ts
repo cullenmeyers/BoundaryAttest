@@ -75,6 +75,7 @@ export async function withAgentReceipt<T>(
       output: result,
       toolMetadata: options.toolMetadata,
       receiptPolicy,
+      receiptRole: "client_observed",
       previousReceiptHash,
     });
     const sinkResult = await receiptSink.write(receipt);
@@ -90,6 +91,7 @@ export async function withAgentReceipt<T>(
       error: errorFingerprint(error),
       toolMetadata: options.toolMetadata,
       receiptPolicy,
+      receiptRole: "client_observed",
       previousReceiptHash,
     });
     const sinkResult = await receiptSink.write(receipt);

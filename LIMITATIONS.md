@@ -46,6 +46,8 @@ It does not automatically wrap arbitrary MCP clients or external MCP servers yet
 
 The real MCP demo only covers local safe demo tools.
 
+The server-side MCP receipt demo only covers local safe demo tools.
+
 There are no production MCP security guarantees.
 
 There is no permission enforcement yet.
@@ -57,6 +59,14 @@ Failed receipts are not the same as blocked receipts.
 The MCP-shaped demo only demonstrates receipt generation around MCP-shaped tool calls.
 
 There is no external MCP server support yet.
+
+No external MCP server support exists for server-attested receipts yet.
+
+There is no Go implementation yet.
+
+There is no formal receipt standard yet.
+
+Server receipts are only as trustworthy as the server key and runtime.
 
 There is no hosted receipt storage yet.
 
