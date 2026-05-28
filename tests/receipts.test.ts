@@ -59,6 +59,82 @@ test("withServerReceipt creates a signed server_attested success receipt", async
   assert.equal(verifyReceipt(receipt), true);
 });
 
+test("withServerReceipt includes caller metadata in a server_attested receipt", async () => {
+  const receiptSink = new MemoryReceiptSink();
+
+  const handler = withServerReceipt({
+    agentId: "test-server",
+    tool: "calendar.create_event",
+    caller: {
+      id: "agent:demo-client",
+      type: "agent",
+      authRef: "local-demo-session",
+    },
+    receiptSink,
+    handler: async (input: { title: string }) => ({ eventId: `event:${input.title}` }),
+  });
+
+  await handler({ title: "Project check-in" });
+  const receipt = receiptSink.receipts[0];
+
+  assert.ok(receipt);
+  assert.equal(receipt.receipt_role, "server_attested");
+  assert.equal(receipt.caller_id, "agent:demo-client");
+  assert.equal(receipt.caller_type, "agent");
+  assert.equal(receipt.caller_auth_ref, "local-demo-session");
+  assert.equal(verifyReceipt(receipt), true);
+});
+
+test("caller metadata is included in the signed payload", async () => {
+  const receiptSink = new MemoryReceiptSink();
+
+  const handler = withServerReceipt({
+    agentId: "test-server",
+    tool: "email.send",
+    caller: {
+      id: "human:ada",
+      type: "human",
+      authRef: "session:123",
+    },
+    receiptSink,
+    handler: async (input: { to: string }) => ({ sentTo: input.to }),
+  });
+
+  await handler({ to: "grace@example.com" });
+  const receipt = receiptSink.receipts[0];
+
+  assert.ok(receipt);
+  assert.equal(verifyReceipt(receipt), true);
+
+  const tamperedReceipt: Receipt = {
+    ...receipt,
+    caller_id: "human:mallory",
+  };
+
+  assert.equal(verifyReceipt(tamperedReceipt), false);
+});
+
+test("withServerReceipt still works without caller metadata", async () => {
+  const receiptSink = new MemoryReceiptSink();
+
+  const handler = withServerReceipt({
+    agentId: "test-server",
+    tool: "math.multiply",
+    receiptSink,
+    handler: async (input: { a: number; b: number }) => ({ product: input.a * input.b }),
+  });
+
+  await handler({ a: 6, b: 7 });
+  const receipt = receiptSink.receipts[0];
+
+  assert.ok(receipt);
+  assert.equal(receipt.receipt_role, "server_attested");
+  assert.equal("caller_id" in receipt, false);
+  assert.equal("caller_type" in receipt, false);
+  assert.equal("caller_auth_ref" in receipt, false);
+  assert.equal(verifyReceipt(receipt), true);
+});
+
 test("withServerReceipt creates a signed server_attested failed receipt and rethrows", async () => {
   const receiptSink = new MemoryReceiptSink();
   const originalError = new Error("server handler exploded");

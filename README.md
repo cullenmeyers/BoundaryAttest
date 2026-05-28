@@ -310,6 +310,29 @@ AgentReceipt receipts can include `receipt_role`.
 
 `npm run example:mcp-server` is a local experimental demo using the official MCP TypeScript SDK, in-memory transport, and the safe demo tools `echo.message` and `math.add`. It is not a formal standard or production trust model. See `docs/client-vs-server-receipts.md` for the short version.
 
+## Caller identity metadata
+
+Server-attested receipts can optionally include caller identity metadata:
+
+```ts
+const handler = withServerReceipt({
+  agentId: "demo-mcp-server",
+  tool: "email.draft",
+  caller: {
+    id: "agent:demo-client",
+    type: "agent",
+    authRef: "local-demo-session"
+  },
+  handler: async (input) => ({ draftId: "draft_123" })
+});
+```
+
+When `caller` is provided, AgentReceipt records `caller_id`, `caller_type`, and `caller_auth_ref` in the signed receipt. If `caller.type` is missing, AgentReceipt records `caller_type: "unknown"`. If `caller` is omitted, caller fields are omitted for backward compatibility.
+
+AgentReceipt does not authenticate callers. Host systems authenticate callers, sessions, services, or agents, then pass that metadata into AgentReceipt. AgentReceipt records that host-supplied metadata into the signed receipt so the receipt can say who invoked the tool at a trust boundary.
+
+This is useful when a later reviewer needs evidence shaped like: server `S` attests caller `X` invoked tool `Y` with args `Z`.
+
 ## Does This Work With Any MCP Server?
 
 Not automatically yet. AgentReceipt currently works where a developer can wrap or intercept the tool-call boundary. The real MCP proof-of-concept shows AgentReceipt can wrap actual MCP SDK `client.callTool(...)` calls. External MCP server support would require adapter testing for transports, client setups, and production edge cases.

@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
-import { withServerReceipt, type ServerReceiptDetails } from "../src/public.js";
+import { withServerReceipt, type CallerMetadata, type ServerReceiptDetails } from "../src/public.js";
 
 type ToolCall = {
   name: string;
@@ -10,6 +10,11 @@ type ToolCall = {
 };
 
 function createLocalMcpServer(receipts: Map<string, ServerReceiptDetails>): McpServer {
+  const demoCaller: CallerMetadata = {
+    id: "agent:demo-client",
+    type: "agent",
+    authRef: "local-demo-session",
+  };
   const server = new McpServer({
     name: "agentreceipt-local-mcp-server-receipt-demo",
     version: "0.1.0",
@@ -35,6 +40,7 @@ function createLocalMcpServer(receipts: Map<string, ServerReceiptDetails>): McpS
     withServerReceipt({
       agentId: "demo-mcp-server",
       tool: "echo.message",
+      caller: demoCaller,
       onReceipt: (details) => {
         receipts.set("echo.message", details);
       },
@@ -69,6 +75,7 @@ function createLocalMcpServer(receipts: Map<string, ServerReceiptDetails>): McpS
     withServerReceipt({
       agentId: "demo-mcp-server",
       tool: "math.add",
+      caller: demoCaller,
       onReceipt: (details) => {
         receipts.set("math.add", details);
       },
@@ -121,6 +128,11 @@ async function main(): Promise<void> {
       console.log("MCP result:");
       console.log(JSON.stringify(result, null, 2));
       console.log(`Server receipt path: ${receipt?.receiptPath ?? "none"}`);
+      console.log(
+        `Caller: ${receipt?.receipt.caller_id ?? "none"} | type: ${
+          receipt?.receipt.caller_type ?? "none"
+        } | auth ref: ${receipt?.receipt.caller_auth_ref ?? "none"}`,
+      );
     }
 
     console.log("Run npm run chain to verify the local receipt chain.");

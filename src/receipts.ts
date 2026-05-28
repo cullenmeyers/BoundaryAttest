@@ -15,6 +15,14 @@ export type ReceiptPolicy = {
   reason?: string;
 };
 
+export type CallerType = "human" | "agent" | "service" | "unknown";
+
+export type CallerMetadata = {
+  id?: string;
+  type?: CallerType;
+  authRef?: string;
+};
+
 export type ReceiptPayload = {
   receipt_id: string;
   agent_id: string;
@@ -29,6 +37,9 @@ export type ReceiptPayload = {
   error_hash?: string;
   tool_metadata_hash?: string;
   receipt_policy?: ReceiptPolicy;
+  caller_id?: string;
+  caller_type?: CallerType;
+  caller_auth_ref?: string;
 };
 
 export type Receipt = ReceiptPayload & {
@@ -45,6 +56,7 @@ export type CreateReceiptOptions = {
   toolMetadata?: unknown;
   receiptPolicy?: ReceiptPolicy;
   receiptRole?: ReceiptRole;
+  caller?: CallerMetadata;
   previousReceiptHash: string | null;
   timestamp?: string;
 };
@@ -78,6 +90,18 @@ export function createSignedReceipt(options: CreateReceiptOptions): Receipt {
 
   if (options.toolMetadata !== undefined) {
     payload.tool_metadata_hash = hashValue(options.toolMetadata);
+  }
+
+  if (options.caller !== undefined) {
+    payload.caller_type = options.caller.type ?? "unknown";
+
+    if (options.caller.id !== undefined) {
+      payload.caller_id = options.caller.id;
+    }
+
+    if (options.caller.authRef !== undefined) {
+      payload.caller_auth_ref = options.caller.authRef;
+    }
   }
 
   return {

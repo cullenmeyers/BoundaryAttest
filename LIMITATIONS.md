@@ -68,6 +68,16 @@ There is no formal receipt standard yet.
 
 Server receipts are only as trustworthy as the server key and runtime.
 
+AgentReceipt does not verify caller identity by itself.
+
+`caller_id` is only as trustworthy as the host system that supplied it.
+
+Request signing is not implemented yet.
+
+Human signatures are not implemented yet.
+
+Delegation envelopes are not implemented yet.
+
 There is no hosted receipt storage yet.
 
 `npm run reset:all` removes local keys in `./.agentreceipt/`.

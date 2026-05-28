@@ -207,4 +207,4 @@ export { withServerReceipt } from "./withServerReceipt.js";
 export type { ServerReceiptDetails, WithServerReceiptOptions } from "./withServerReceipt.js";
 export { ConsoleReceiptSink, LocalFileReceiptSink, MemoryReceiptSink } from "./sinks.js";
 export type { AgentReceipt, ReceiptSink, ReceiptSinkResult } from "./sinks.js";
-export type { Receipt, ReceiptRole } from "./receipts.js";
+export type { CallerMetadata, CallerType, Receipt, ReceiptRole } from "./receipts.js";
