@@ -66,6 +66,7 @@ npm run example:sink
 npm run example:mcp
 npm run example:mcp-real
 npm run example:mcp-server
+npm run example:trust-boundary
 npm run verify -- <receiptPath>
 npm run chain
 npm run chain:retained
@@ -95,6 +96,12 @@ Server-side MCP receipt demo:
 
 ```sh
 npm run example:mcp-server
+```
+
+Trust-boundary demo:
+
+```sh
+npm run example:trust-boundary
 ```
 
 MCP-shaped educational demo:
@@ -332,6 +339,24 @@ When `caller` is provided, AgentReceipt records `caller_id`, `caller_type`, and 
 AgentReceipt does not authenticate callers. Host systems authenticate callers, sessions, services, or agents, then pass that metadata into AgentReceipt. AgentReceipt records that host-supplied metadata into the signed receipt so the receipt can say who invoked the tool at a trust boundary.
 
 This is useful when a later reviewer needs evidence shaped like: server `S` attests caller `X` invoked tool `Y` with args `Z`.
+
+## Trust-boundary demo
+
+Run:
+
+```sh
+npm run example:trust-boundary
+```
+
+The demo shows side-effecting business-style actions using fake local data only:
+
+- `business.record_update`
+- `documents.publish_record`
+- `commerce.create_order_hold`
+
+It demonstrates the shape: server attests caller `X` invoked tool `Y` with args `Z` and returned result `R`.
+
+AgentReceipt is not replacing logs or OpenTelemetry. Normal logs and telemetry are usually the right tools for ordinary debugging and internal monitoring. AgentReceipt is for cases where a portable, verifiable action record matters across a trust boundary.
 
 ## Does This Work With Any MCP Server?
 

@@ -48,6 +48,14 @@ The real MCP demo only covers local safe demo tools.
 
 The server-side MCP receipt demo only covers local safe demo tools.
 
+The trust-boundary demo uses fake data only.
+
+It is not financial, legal, payment, accounting, commerce, or compliance software.
+
+It does not prove real-world authorization, correctness, or regulatory compliance.
+
+It only demonstrates receipt shape for higher-trust-boundary tool calls.
+
 There are no production MCP security guarantees.
 
 There is no permission enforcement yet.
