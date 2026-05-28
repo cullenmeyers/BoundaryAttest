@@ -1,6 +1,8 @@
 # AgentReceipt
 
-AgentReceipt creates tamper-evident receipts for AI agent tool calls.
+AgentReceipt creates structured, verifiable action records for AI agent/MCP tool calls that cross trust boundaries.
+
+Normal logs and OpenTelemetry are usually enough for internal debugging and monitoring. AgentReceipt is for cases where a portable, signed action record may need to be verified later: multi-agent workflows, org-to-org workflows, delegated agents, business record changes, document publishing, commerce/dispute scenarios, and high-value or hard-to-reverse actions.
 
 When an agent calls a tool, AgentReceipt can:
 
@@ -11,6 +13,18 @@ When an agent calls a tool, AgentReceipt can:
 - chain the receipt to previous receipts
 - verify later that the receipt chain is intact
 
+## Best Conceptual Demo
+
+```sh
+npm install
+npm run build
+npm run example:trust-boundary
+```
+
+The trust-boundary demo uses the official MCP TypeScript SDK with local in-memory transport and fake local data. It shows side-effecting business-style actions where a server attests that caller `X` invoked tool `Y` with args `Z` and returned result `R`.
+
+The `echo.message` and `math.add` demos prove the plumbing. The trust-boundary demo shows the intended use case.
+
 ## 30-Second Demo
 
 ```sh
@@ -18,33 +32,33 @@ npm install
 npm run demo:clean
 ```
 
-Expected output: `demo:clean` preserves your local signing key, removes old demo receipts, builds the TypeScript project, runs the real local MCP SDK proof-of-concept, writes signed receipts to `./receipts/`, and prints `Chain is intact.`
+`npm run demo:clean` is the quick technical smoke test. It preserves your local signing key, removes old demo receipts, builds the TypeScript project, runs the real local MCP SDK proof-of-concept, writes signed receipts to `./receipts/`, and prints `Chain is intact.`
 
 The clean demo creates receipts for two safe local demo tools:
 
 - `echo.message`
 - `math.add`
 
-These tools run only inside the local MCP SDK demo. They do not touch real files, email, calendars, credentials, network services, browsers, or user data.
+These tools run only inside the local MCP SDK demo. They do not touch real files, email, calendars, credentials, network services, browsers, or user data. Use `npm run example:trust-boundary` for the best conceptual demo.
 
 ## What This Is
 
 - A local-first developer tool.
 - A receipt/provenance layer for agent tool calls.
 - A TypeScript CLI and wrapper API.
-- A demo that currently supports a real local MCP SDK proof-of-concept, plus fake-tool and MCP-shaped educational examples.
+- A set of local demos covering MCP client-side receipts, server-attested receipts, and trust-boundary positioning.
 
 ## What This Is Not
 
 - Not a security guarantee.
-- Not compliance software.
-- Not a real MCP integration yet.
+- Not compliance-grade audit software.
+- Not production/external MCP server support yet.
 - Not a permission engine.
 - Not a hosted dashboard.
 
 ## Why This Matters
 
-As AI agents call more tools, developers need a lightweight way to prove what happened without storing private raw inputs or outputs. AgentReceipt records hashes, signatures, timestamps, and chain links so receipts can be checked later.
+As AI agents call more tools across boundaries, developers need a lightweight way to prove what happened without storing private raw inputs or outputs. AgentReceipt records hashes, signatures, timestamps, caller metadata when supplied, and chain links so receipts can be checked later.
 
 ## Current Status
 
@@ -52,28 +66,36 @@ As AI agents call more tools, developers need a lightweight way to prove what ha
 - local-only
 - experimental
 - receipts-first
-- real local MCP proof-of-concept only
+- real local MCP SDK proof-of-concept only
+- trust-boundary demo with fake local data
 - MCP-shaped educational demo only
 
 ## Commands
 
+Most useful commands:
+
 ```sh
 npm run build
+npm test
+npm run example:trust-boundary
 npm run demo:clean
+npm run chain
+```
+
+Additional examples and maintenance commands:
+
+```sh
 npm run demo
 npm run example:wrap
 npm run example:sink
 npm run example:mcp
 npm run example:mcp-real
 npm run example:mcp-server
-npm run example:trust-boundary
 npm run verify -- <receiptPath>
-npm run chain
 npm run chain:retained
 npm run prune
 npm run reset:demo
 npm run reset:all
-npm run demo:clean
 ```
 
 ## Testing
@@ -292,7 +314,7 @@ const { mcpResult, receipt, receiptPath } = await withMcpReceipt({
 });
 ```
 
-`withMcpReceipt` validates that `method` is exactly `tools/call`, uses `params.name` as the AgentReceipt tool name, and uses `params.arguments` as the recorded input. Real MCP support would come later by wrapping actual MCP client/server tool calls.
+`withMcpReceipt` validates that `method` is exactly `tools/call`, uses `params.name` as the AgentReceipt tool name, and uses `params.arguments` as the recorded input. It is an educational adapter for MCP-shaped requests; the real local MCP SDK demos show the current client-side and server-side wrapper patterns.
 
 AgentReceipt currently records executed and failed tool calls. It does not approve, deny, block, or enforce actions.
 
@@ -305,17 +327,19 @@ The demo tools are:
 - `echo.message`
 - `math.add`
 
-This proof-of-concept does not connect to external tools, user data, files, credentials, network services, browsers, email, or calendars. It is experimental and intentionally local-only. Real production MCP support would need more work around deployment, trust boundaries, key handling, and operational security.
+This proof-of-concept does not connect to external tools, user data, files, credentials, network services, browsers, email, or calendars. It is experimental and intentionally local-only. Production/external MCP server support would need more work around deployment, trust boundaries, key handling, and operational security.
 
 ## Client-Observed vs Server-Attested Receipts
 
 AgentReceipt receipts can include `receipt_role`.
 
-`client_observed` receipts wrap `client.callTool(...)` or another client-side tool-call boundary. They prove what the client says it sent and what it observed receiving back.
+`client_observed` receipts wrap `client.callTool(...)` or another client-side tool-call boundary. They prove what the client observed sending and receiving.
 
-`server_attested` receipts wrap the server-side tool handler. They prove what the server says reached the handler, whether the handler ran, and what the handler returned or threw. This is closer to the source of truth for tool execution and is stronger for third-party proof when the server key and runtime are trusted.
+`server_attested` receipts wrap the server-side tool handler. They prove what the server attests happened, assuming the server key and runtime are trusted. This is closer to the source of truth for tool execution and is stronger for third-party proof.
 
 `npm run example:mcp-server` is a local experimental demo using the official MCP TypeScript SDK, in-memory transport, and the safe demo tools `echo.message` and `math.add`. It is not a formal standard or production trust model. See `docs/client-vs-server-receipts.md` for the short version.
+
+The trust-boundary demo uses server-attested receipts because that is the clearer shape for actions that may need later verification across a boundary.
 
 ## Caller identity metadata
 
@@ -360,13 +384,17 @@ AgentReceipt is not replacing logs or OpenTelemetry. Normal logs and telemetry a
 
 ## Does This Work With Any MCP Server?
 
-Not automatically yet. AgentReceipt currently works where a developer can wrap or intercept the tool-call boundary. The real MCP proof-of-concept shows AgentReceipt can wrap actual MCP SDK `client.callTool(...)` calls. External MCP server support would require adapter testing for transports, client setups, and production edge cases.
+Not automatically yet. AgentReceipt currently works where a developer can wrap or intercept the tool-call boundary. The real MCP proof-of-concept shows AgentReceipt can wrap actual MCP SDK `client.callTool(...)` calls. Production/external MCP server support would require adapter testing for transports, client setups, and production edge cases.
 
 ## What It Does Not Prove
 
-AgentReceipt does not prove that an agent made a correct decision, that a tool actually ran, or that the surrounding system was secure. Hashes prove the same input, output, or error fingerprint can be matched later, not that the action was correct.
+`client_observed` receipts prove what the client observed sending and receiving.
 
-It is not compliance software, not an audit system, and not a substitute for secure logging, access control, independent timestamping, or production key management.
+`server_attested` receipts prove what the server attests happened, assuming the server key and runtime are trusted.
+
+AgentReceipt still does not prove that an agent made a correct decision, that an action was authorized, that the surrounding system was secure, or that any workflow is compliant. Hashes prove the same input, output, or error fingerprint can be matched later, not that the action was correct.
+
+It is not compliance software, not a compliance-grade audit system, and not a substitute for secure logging, access control, independent timestamping, or production key management.
 
 ## Roadmap
 

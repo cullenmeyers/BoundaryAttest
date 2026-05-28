@@ -4,7 +4,7 @@ AgentReceipt is experimental local-first software.
 
 AgentReceipt receipts are tamper-evident local records, not a security guarantee.
 
-It is not compliance software and should not be used as a legal, regulatory, or audit-grade record system.
+It is not compliance software and should not be used as a legal, regulatory, or compliance-grade audit system.
 
 It does not prove that an agent made a correct decision. It also does not prove that an external tool actually performed the claimed action.
 
@@ -42,7 +42,7 @@ AgentReceipt works where a developer can wrap or intercept the tool-call boundar
 
 It does not automatically attach to closed agent platforms.
 
-It does not automatically wrap arbitrary MCP clients or external MCP servers yet.
+It does not provide production/external MCP server support yet.
 
 The real MCP demo only covers local safe demo tools.
 
@@ -57,6 +57,8 @@ It does not prove real-world authorization, correctness, or regulatory complianc
 It only demonstrates receipt shape for higher-trust-boundary tool calls.
 
 There are no production MCP security guarantees.
+
+Production key management is not implemented.
 
 There is no permission enforcement yet.
 
@@ -77,6 +79,8 @@ There is no formal receipt standard yet.
 Server receipts are only as trustworthy as the server key and runtime.
 
 AgentReceipt does not verify caller identity by itself.
+
+Caller metadata is only as trustworthy as the host system that supplied it.
 
 `caller_id` is only as trustworthy as the host system that supplied it.
 
