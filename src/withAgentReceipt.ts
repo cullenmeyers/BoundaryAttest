@@ -4,6 +4,7 @@ import { setupKeys } from "./keys.js";
 import {
   createSignedReceipt,
   listReceiptPaths,
+  type LineageMetadata,
   type Receipt,
   type ReceiptPolicy,
 } from "./receipts.js";
@@ -14,6 +15,7 @@ export type WithAgentReceiptOptions<T> = {
   tool: string;
   input: unknown;
   toolMetadata?: unknown;
+  lineage?: LineageMetadata;
   receiptPolicy?: ReceiptPolicy;
   receiptSink?: ReceiptSink;
   run: () => Promise<T>;
@@ -74,6 +76,7 @@ export async function withAgentReceipt<T>(
       input: options.input,
       output: result,
       toolMetadata: options.toolMetadata,
+      lineage: options.lineage,
       receiptPolicy,
       receiptRole: "client_observed",
       previousReceiptHash,
@@ -90,6 +93,7 @@ export async function withAgentReceipt<T>(
       input: options.input,
       error: errorFingerprint(error),
       toolMetadata: options.toolMetadata,
+      lineage: options.lineage,
       receiptPolicy,
       receiptRole: "client_observed",
       previousReceiptHash,

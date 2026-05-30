@@ -364,6 +364,31 @@ AgentReceipt does not authenticate callers. Host systems authenticate callers, s
 
 This is useful when a later reviewer needs evidence shaped like: server `S` attests caller `X` invoked tool `Y` with args `Z`.
 
+## Linking receipts to upstream records
+
+AgentReceipt can link an execution receipt back to an upstream proposal, ticket, approval, workflow run, or execution record.
+
+AgentReceipt does not manage that upstream system. Host systems supply the lineage reference, type, optional hash, and optional label:
+
+```ts
+await withServerReceipt({
+  agentId: "demo-server",
+  tool: "business.record_update",
+  caller: { id: "agent:demo-client", type: "agent" },
+  lineage: {
+    ref: "proposal:demo-001",
+    type: "proposal",
+    hash: "sha256:host-supplied-fingerprint",
+    label: "Approve fake business record update"
+  },
+  handler: async (input) => ({ updated: true })
+});
+```
+
+When present, AgentReceipt records `lineage_ref`, `lineage_type`, `lineage_hash`, and `lineage_label` in the signed receipt. If `lineage.type` is missing, AgentReceipt records `lineage_type: "other"`. If lineage is omitted, these fields are omitted for backward compatibility.
+
+This helps show continuity: upstream intent/approval record -> server-attested execution receipt -> outcome/review. See `docs/receipt-lineage.md` for the short version.
+
 ## Trust-boundary demo
 
 Run:
@@ -378,7 +403,7 @@ The demo shows side-effecting business-style actions using fake local data only:
 - `documents.publish_record`
 - `commerce.create_order_hold`
 
-It demonstrates the shape: server attests caller `X` invoked tool `Y` with args `Z` and returned result `R`.
+It demonstrates the shape: server attests caller `X` invoked tool `Y` with args `Z`, linked to optional upstream record `P`, and returned result `R`.
 
 AgentReceipt is not replacing logs or OpenTelemetry. Normal logs and telemetry are usually the right tools for ordinary debugging and internal monitoring. AgentReceipt is for cases where a portable, verifiable action record matters across a trust boundary.
 
@@ -393,6 +418,8 @@ Not automatically yet. AgentReceipt currently works where a developer can wrap o
 `server_attested` receipts prove what the server attests happened, assuming the server key and runtime are trusted.
 
 AgentReceipt still does not prove that an agent made a correct decision, that an action was authorized, that the surrounding system was secure, or that any workflow is compliant. Hashes prove the same input, output, or error fingerprint can be matched later, not that the action was correct.
+
+AgentReceipt does not verify upstream proposal, ticket, approval, workflow, or execution records by itself. `lineage_ref` and `lineage_hash` are host-supplied metadata.
 
 It is not compliance software, not a compliance-grade audit system, and not a substitute for secure logging, access control, independent timestamping, or production key management.
 

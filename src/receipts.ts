@@ -15,6 +15,22 @@ export type ReceiptPolicy = {
   reason?: string;
 };
 
+export type LineageType =
+  | "proposal"
+  | "approval"
+  | "ticket"
+  | "change_request"
+  | "workflow_run"
+  | "execution_record"
+  | "other";
+
+export type LineageMetadata = {
+  ref: string;
+  type?: LineageType;
+  hash?: string;
+  label?: string;
+};
+
 export type CallerType = "human" | "agent" | "service" | "unknown";
 
 export type CallerMetadata = {
@@ -40,6 +56,10 @@ export type ReceiptPayload = {
   caller_id?: string;
   caller_type?: CallerType;
   caller_auth_ref?: string;
+  lineage_ref?: string;
+  lineage_type?: LineageType;
+  lineage_hash?: string;
+  lineage_label?: string;
 };
 
 export type Receipt = ReceiptPayload & {
@@ -57,6 +77,7 @@ export type CreateReceiptOptions = {
   receiptPolicy?: ReceiptPolicy;
   receiptRole?: ReceiptRole;
   caller?: CallerMetadata;
+  lineage?: LineageMetadata;
   previousReceiptHash: string | null;
   timestamp?: string;
 };
@@ -101,6 +122,19 @@ export function createSignedReceipt(options: CreateReceiptOptions): Receipt {
 
     if (options.caller.authRef !== undefined) {
       payload.caller_auth_ref = options.caller.authRef;
+    }
+  }
+
+  if (options.lineage !== undefined) {
+    payload.lineage_ref = options.lineage.ref;
+    payload.lineage_type = options.lineage.type ?? "other";
+
+    if (options.lineage.hash !== undefined) {
+      payload.lineage_hash = options.lineage.hash;
+    }
+
+    if (options.lineage.label !== undefined) {
+      payload.lineage_label = options.lineage.label;
     }
   }
 

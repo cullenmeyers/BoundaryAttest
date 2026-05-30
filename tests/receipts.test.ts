@@ -114,6 +114,83 @@ test("caller metadata is included in the signed payload", async () => {
   assert.equal(verifyReceipt(tamperedReceipt), false);
 });
 
+test("receipt includes lineage metadata when provided", async () => {
+  const receiptSink = new MemoryReceiptSink();
+
+  const wrapped = await withAgentReceipt({
+    agentId: "test-client",
+    tool: "workflow.execute",
+    input: { workflowId: "workflow:123" },
+    lineage: {
+      ref: "ticket:AR-123",
+      type: "ticket",
+      hash: "sha256:demo-ticket-hash",
+      label: "Approve workflow execution",
+    },
+    receiptSink,
+    run: async () => ({ executed: true }),
+  });
+
+  assert.ok(wrapped.receipt);
+  assert.equal(wrapped.receipt.lineage_ref, "ticket:AR-123");
+  assert.equal(wrapped.receipt.lineage_type, "ticket");
+  assert.equal(wrapped.receipt.lineage_hash, "sha256:demo-ticket-hash");
+  assert.equal(wrapped.receipt.lineage_label, "Approve workflow execution");
+  assert.equal(verifyReceipt(wrapped.receipt), true);
+});
+
+test("lineage metadata is included in the signed payload", async () => {
+  const receiptSink = new MemoryReceiptSink();
+
+  const handler = withServerReceipt({
+    agentId: "test-server",
+    tool: "business.record_update",
+    lineage: {
+      ref: "proposal:demo-001",
+      type: "proposal",
+      hash: "sha256:demo-proposal-hash",
+      label: "Approve fake business record update",
+    },
+    receiptSink,
+    handler: async (input: { recordId: string }) => ({ updatedRecordId: input.recordId }),
+  });
+
+  await handler({ recordId: "customer:acme" });
+  const receipt = receiptSink.receipts[0];
+
+  assert.ok(receipt);
+  assert.equal(verifyReceipt(receipt), true);
+
+  const tamperedReceipt: Receipt = {
+    ...receipt,
+    lineage_ref: "proposal:tampered",
+  };
+
+  assert.equal(verifyReceipt(tamperedReceipt), false);
+});
+
+test("lineage type defaults to other when omitted", async () => {
+  const receiptSink = new MemoryReceiptSink();
+
+  const wrapped = await withAgentReceipt({
+    agentId: "test-client",
+    tool: "workflow.execute",
+    input: { workflowId: "workflow:456" },
+    lineage: {
+      ref: "workflow:upstream-456",
+    },
+    receiptSink,
+    run: async () => ({ executed: true }),
+  });
+
+  assert.ok(wrapped.receipt);
+  assert.equal(wrapped.receipt.lineage_ref, "workflow:upstream-456");
+  assert.equal(wrapped.receipt.lineage_type, "other");
+  assert.equal("lineage_hash" in wrapped.receipt, false);
+  assert.equal("lineage_label" in wrapped.receipt, false);
+  assert.equal(verifyReceipt(wrapped.receipt), true);
+});
+
 test("withServerReceipt still works without caller metadata", async () => {
   const receiptSink = new MemoryReceiptSink();
 
@@ -133,6 +210,25 @@ test("withServerReceipt still works without caller metadata", async () => {
   assert.equal("caller_type" in receipt, false);
   assert.equal("caller_auth_ref" in receipt, false);
   assert.equal(verifyReceipt(receipt), true);
+});
+
+test("receipts still work when lineage metadata is missing", async () => {
+  const receiptSink = new MemoryReceiptSink();
+
+  const wrapped = await withAgentReceipt({
+    agentId: "test-client",
+    tool: "client.no_lineage",
+    input: { ok: true },
+    receiptSink,
+    run: async () => ({ ok: true }),
+  });
+
+  assert.ok(wrapped.receipt);
+  assert.equal("lineage_ref" in wrapped.receipt, false);
+  assert.equal("lineage_type" in wrapped.receipt, false);
+  assert.equal("lineage_hash" in wrapped.receipt, false);
+  assert.equal("lineage_label" in wrapped.receipt, false);
+  assert.equal(verifyReceipt(wrapped.receipt), true);
 });
 
 test("withServerReceipt creates a signed server_attested failed receipt and rethrows", async () => {

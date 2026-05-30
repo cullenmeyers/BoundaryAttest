@@ -5,6 +5,7 @@ import {
   createSignedReceipt,
   listReceiptPaths,
   type CallerMetadata,
+  type LineageMetadata,
   type Receipt,
   type ReceiptPolicy,
 } from "./receipts.js";
@@ -22,6 +23,7 @@ export type WithServerReceiptOptions<TArgs extends unknown[], TResult> = {
   tool: string;
   toolMetadata?: unknown;
   caller?: CallerMetadata;
+  lineage?: LineageMetadata;
   receiptPolicy?: ReceiptPolicy;
   receiptSink?: ReceiptSink;
   getReceiptInput?: (...args: TArgs) => unknown;
@@ -69,6 +71,7 @@ export function withServerReceipt<TArgs extends unknown[], TResult>(
         output: result,
         toolMetadata: options.toolMetadata,
         caller: options.caller,
+        lineage: options.lineage,
         receiptPolicy,
         receiptRole: "server_attested",
         previousReceiptHash,
@@ -87,6 +90,7 @@ export function withServerReceipt<TArgs extends unknown[], TResult>(
         error: errorFingerprint(error),
         toolMetadata: options.toolMetadata,
         caller: options.caller,
+        lineage: options.lineage,
         receiptPolicy,
         receiptRole: "server_attested",
         previousReceiptHash,

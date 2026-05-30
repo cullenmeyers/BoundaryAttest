@@ -2,7 +2,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
-import { withServerReceipt, type CallerMetadata, type ServerReceiptDetails } from "../src/public.js";
+import { hashValue } from "../src/hash.js";
+import { withServerReceipt, type CallerMetadata, type LineageMetadata, type ServerReceiptDetails } from "../src/public.js";
 
 type ToolCall = {
   name: string;
@@ -22,6 +23,21 @@ const demoCaller: CallerMetadata = {
 const demoReceiptPolicy = {
   mode: "required" as const,
   reason: "trust-boundary demo action",
+};
+
+const fakeProposal = {
+  id: "proposal:demo-001",
+  title: "Approve fake business record update",
+  requestedAction: "business.record_update",
+  proposedBy: "agent:demo-client",
+  targetRecord: "customer:acme",
+};
+
+const demoLineage: LineageMetadata = {
+  ref: fakeProposal.id,
+  type: "proposal",
+  label: fakeProposal.title,
+  hash: hashValue(fakeProposal),
 };
 
 function createLocalMcpServer(receipts: Map<string, ServerReceiptDetails>): McpServer {
@@ -64,6 +80,7 @@ function createLocalMcpServer(receipts: Map<string, ServerReceiptDetails>): McpS
       agentId: "demo-trust-boundary-server",
       tool: "business.record_update",
       caller: demoCaller,
+      lineage: demoLineage,
       receiptPolicy: demoReceiptPolicy,
       onReceipt: (details) => {
         receipts.set("business.record_update", details);
@@ -239,6 +256,8 @@ async function main(): Promise<void> {
       console.log(`caller_id: ${receipt?.receipt.caller_id ?? "none"}`);
       console.log(`receipt role: ${receipt?.receipt.receipt_role ?? "none"}`);
       console.log(`receipt policy reason: ${receipt?.receipt.receipt_policy?.reason ?? "none"}`);
+      console.log(`lineage_ref: ${receipt?.receipt.lineage_ref ?? "none"}`);
+      console.log(`lineage_type: ${receipt?.receipt.lineage_type ?? "none"}`);
       console.log(`receipt path: ${receipt?.receiptPath ?? "none"}`);
     }
 

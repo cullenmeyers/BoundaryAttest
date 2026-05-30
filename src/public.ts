@@ -6,4 +6,12 @@ export { ConsoleReceiptSink, LocalFileReceiptSink, MemoryReceiptSink } from "./s
 export type { AgentReceipt, ReceiptSink, ReceiptSinkResult } from "./sinks.js";
 export { withMcpReceipt } from "./mcp.js";
 export type { McpToolsCallRequest, WithMcpReceiptOptions, WithMcpReceiptResult } from "./mcp.js";
-export type { CallerMetadata, CallerType, Receipt, ReceiptPolicy, ReceiptRole } from "./receipts.js";
+export type {
+  CallerMetadata,
+  CallerType,
+  LineageMetadata,
+  LineageType,
+  Receipt,
+  ReceiptPolicy,
+  ReceiptRole,
+} from "./receipts.js";

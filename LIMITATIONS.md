@@ -84,6 +84,12 @@ Caller metadata is only as trustworthy as the host system that supplied it.
 
 `caller_id` is only as trustworthy as the host system that supplied it.
 
+AgentReceipt does not verify upstream proposal, ticket, approval, workflow, or execution records by itself.
+
+`lineage_ref` and `lineage_hash` are only as trustworthy as the host system that supplied them.
+
+No governance engine, DAO integration, blockchain anchoring, or approval system is implemented.
+
 Request signing is not implemented yet.
 
 Human signatures are not implemented yet.
