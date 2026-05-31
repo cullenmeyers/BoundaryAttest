@@ -331,6 +331,35 @@ test("local chain verification passes with mixed client_observed and server_atte
   assert.equal(result.intact, true);
 });
 
+test("concurrent LocalFileReceiptSink writes form one linear chain", async () => {
+  const count = 12;
+
+  await Promise.all(
+    Array.from({ length: count }, async (_, index) =>
+      withAgentReceipt({
+        agentId: "test-client",
+        tool: "client.concurrent",
+        input: { index },
+        run: async () => {
+          await new Promise((resolve) => setTimeout(resolve, index % 3));
+          return { index };
+        },
+      }),
+    ),
+  );
+
+  const receipts = sortedReceipts(listReceiptPaths());
+  const keyMaterial = setupKeys();
+  const result = verifyStrictChain(receipts, keyMaterial.publicKeyPem);
+  const previousHashes = receipts.map((item) => item.receipt.previous_receipt_hash);
+  const nonNullPreviousHashes = previousHashes.filter((hash): hash is string => hash !== null);
+
+  assert.equal(receipts.length, count);
+  assert.equal(result.intact, true);
+  assert.equal(previousHashes.filter((hash) => hash === null).length, 1);
+  assert.equal(new Set(nonNullPreviousHashes).size, count - 1);
+});
+
 test("createSignedReceipt defaults new receipts to client_observed", () => {
   const receipt = createSignedReceipt({
     agentId: "test-agent",

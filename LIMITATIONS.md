@@ -30,6 +30,12 @@ Custom sinks are responsible for their own storage durability.
 
 Local chain verification only covers local file receipts.
 
+In-process chain serialization is supported for `LocalFileReceiptSink`.
+
+Multi-process/distributed chain consistency is not solved yet.
+
+Production systems with multiple writers should use a durable coordinated sink.
+
 AgentReceipt does not yet support cross-sink or global chain verification.
 
 No vendor integrations are included yet.

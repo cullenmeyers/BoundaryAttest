@@ -1,4 +1,5 @@
-import { writeReceipt, type Receipt } from "./receipts.js";
+import { latestReceiptHash, sortedReceipts } from "./chain.js";
+import { createSignedReceipt, listReceiptPaths, writeReceipt, type CreateReceiptOptions, type Receipt } from "./receipts.js";
 
 export type AgentReceipt = Receipt;
 
@@ -13,10 +14,41 @@ export type ReceiptSink = {
   write(receipt: AgentReceipt): Promise<ReceiptSinkResult>;
 };
 
+export type LocalFileReceiptWriteResult = {
+  receipt: AgentReceipt;
+  sinkResult: ReceiptSinkResult;
+};
+
+let localFileWriteQueue: Promise<void> = Promise.resolve();
+
+function enqueueLocalFileWrite<T>(task: () => T | Promise<T>): Promise<T> {
+  const run = localFileWriteQueue.then(task, task);
+  localFileWriteQueue = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
 export class LocalFileReceiptSink implements ReceiptSink {
   readonly name = "local-file";
 
   async write(receipt: AgentReceipt): Promise<ReceiptSinkResult> {
+    return enqueueLocalFileWrite(() => this.writeImmediate(receipt));
+  }
+
+  async createAndWriteReceipt(
+    options: Omit<CreateReceiptOptions, "previousReceiptHash">,
+  ): Promise<LocalFileReceiptWriteResult> {
+    return enqueueLocalFileWrite(() => {
+      const previousReceiptHash = latestReceiptHash(sortedReceipts(listReceiptPaths()));
+      const receipt = createSignedReceipt({ ...options, previousReceiptHash });
+      const sinkResult = this.writeImmediate(receipt);
+      return { receipt, sinkResult };
+    });
+  }
+
+  private writeImmediate(receipt: AgentReceipt): ReceiptSinkResult {
     const receiptPath = writeReceipt(receipt);
     return {
       receiptPath,

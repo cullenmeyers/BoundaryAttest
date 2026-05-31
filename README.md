@@ -265,7 +265,9 @@ const wrapped = await withAgentReceipt({
 
 If `receiptSink` is omitted, AgentReceipt uses `LocalFileReceiptSink` and preserves the existing local file behavior. If `receiptPolicy.mode` is `"off"`, AgentReceipt does not create a receipt and does not call the sink.
 
-Local chain verification applies only to receipts written by `LocalFileReceiptSink`. Custom sinks are useful for integration, but external durability and verification are the developer's responsibility for now. AgentReceipt does not yet support cross-sink or global chain verification.
+Local chain verification applies only to receipts written by `LocalFileReceiptSink`. `LocalFileReceiptSink` serializes in-process receipt signing and writes to reduce chain races during concurrent tool calls. This is not distributed locking; multi-process or distributed receipt chains need stronger coordination.
+
+Custom sinks are useful for integration, but external durability and verification are the developer's responsibility for now. AgentReceipt does not yet support cross-sink or global chain verification.
 
 ## Retention and pruning
 

@@ -19,7 +19,9 @@ export type ChainVerificationResult = {
 export function sortedReceipts(receiptPaths: string[]): ReceiptWithPath[] {
   return receiptPaths
     .map((receiptPath) => ({ receiptPath, receipt: parseReceipt(receiptPath) }))
-    .sort((a, b) => a.receipt.timestamp.localeCompare(b.receipt.timestamp));
+    .sort(
+      (a, b) => a.receipt.timestamp.localeCompare(b.receipt.timestamp) || a.receiptPath.localeCompare(b.receiptPath),
+    );
 }
 
 export function latestReceiptHash(receipts: ReceiptWithPath[]): string | null {

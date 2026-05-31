@@ -1,9 +1,6 @@
-import { latestReceiptHash, sortedReceipts } from "./chain.js";
 import { hashValue } from "./hash.js";
-import { setupKeys } from "./keys.js";
 import {
   createSignedReceipt,
-  listReceiptPaths,
   type CallerMetadata,
   type LineageMetadata,
   type Receipt,
@@ -57,13 +54,10 @@ export function withServerReceipt<TArgs extends unknown[], TResult>(
 
     const receiptSink = options.receiptSink ?? new LocalFileReceiptSink();
     const receiptInput = options.getReceiptInput ? options.getReceiptInput(...args) : args[0];
-    setupKeys();
-    const previousReceiptHash =
-      receiptSink instanceof LocalFileReceiptSink ? latestReceiptHash(sortedReceipts(listReceiptPaths())) : null;
 
     try {
       const result = await options.handler(...args);
-      const receipt = createSignedReceipt({
+      const receiptOptions = {
         agentId: options.agentId,
         tool: options.tool,
         actionStatus: "executed",
@@ -74,15 +68,21 @@ export function withServerReceipt<TArgs extends unknown[], TResult>(
         lineage: options.lineage,
         receiptPolicy,
         receiptRole: "server_attested",
-        previousReceiptHash,
-      });
-      const sinkResult = await receiptSink.write(receipt);
-      const details = { receipt, receiptPath: sinkResult.receiptPath ?? null, sinkResult };
+      } as const;
+      const { receipt, sinkResult } =
+        receiptSink instanceof LocalFileReceiptSink
+          ? await receiptSink.createAndWriteReceipt(receiptOptions)
+          : {
+              receipt: createSignedReceipt({ ...receiptOptions, previousReceiptHash: null }),
+              sinkResult: null,
+            };
+      const finalSinkResult = sinkResult ?? (await receiptSink.write(receipt));
+      const details = { receipt, receiptPath: finalSinkResult.receiptPath ?? null, sinkResult: finalSinkResult };
       await options.onReceipt?.(details);
 
       return result;
     } catch (error) {
-      const receipt = createSignedReceipt({
+      const receiptOptions = {
         agentId: options.agentId,
         tool: options.tool,
         actionStatus: "failed",
@@ -93,10 +93,16 @@ export function withServerReceipt<TArgs extends unknown[], TResult>(
         lineage: options.lineage,
         receiptPolicy,
         receiptRole: "server_attested",
-        previousReceiptHash,
-      });
-      const sinkResult = await receiptSink.write(receipt);
-      const details = { receipt, receiptPath: sinkResult.receiptPath ?? null, sinkResult };
+      } as const;
+      const { receipt, sinkResult } =
+        receiptSink instanceof LocalFileReceiptSink
+          ? await receiptSink.createAndWriteReceipt(receiptOptions)
+          : {
+              receipt: createSignedReceipt({ ...receiptOptions, previousReceiptHash: null }),
+              sinkResult: null,
+            };
+      const finalSinkResult = sinkResult ?? (await receiptSink.write(receipt));
+      const details = { receipt, receiptPath: finalSinkResult.receiptPath ?? null, sinkResult: finalSinkResult };
       await options.onReceipt?.(details);
 
       if (error && typeof error === "object") {
