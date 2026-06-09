@@ -60,6 +60,46 @@ These tools run only inside the local MCP SDK demo. They do not touch real files
 
 As AI agents call more tools across boundaries, developers need a lightweight way to prove what happened without storing private raw inputs or outputs. AgentReceipt records hashes, signatures, timestamps, caller metadata when supplied, and chain links so receipts can be checked later.
 
+## Portable execution evidence
+
+AgentReceipt is not a replacement for logs, tracing, Git history, cloud audit trails, provider audit logs, or approval systems. Those systems are still the right source of truth for ordinary debugging, platform operations, access history, and workflow enforcement.
+
+AgentReceipt is a portable signed record for agent/tool actions that may need to be verified outside the original runtime.
+
+Strong use cases include:
+
+- state-changing tool calls
+- external MCP servers or third-party tools
+- multi-agent or multi-user attribution
+- actions that need to attach to a PR, task, workflow run, audit packet, ticket, or downstream system
+- cross-team, cross-vendor, or cross-runtime workflows
+
+Weak use cases include:
+
+- low-value diagnostic calls
+- internal debugging where logs are enough
+- clean GitOps paths where Git history and platform audit logs already answer who did what
+
+## Key custody and trust model
+
+`server_attested` receipts are only as trustworthy as the server key and runtime. The local demo key in `.agentreceipt` is not production key management.
+
+Real deployments need explicit decisions about key storage, key rotation, custody, and access control. AgentReceipt does not authenticate callers by itself. Host systems authenticate callers, sessions, services, or agents, then pass caller metadata into AgentReceipt. AgentReceipt records that host-supplied metadata and signs it into the receipt.
+
+A receipt proves that the holder of the signing key produced the receipt over the included fields. It does not prove the business correctness of the action.
+
+## Selective capture
+
+Do not sign every low-value diagnostic call by default. Prefer signing important state-changing or trust-boundary actions: service restarts, config edits, script executions, deploys, ticket/workflow changes, database writes, filesystem writes, browser/form actions, and cloud/infra changes.
+
+Diagnostic and read-only calls can still be signed if the host system needs that level of evidence, but broad capture may create noise.
+
+## Interop and schema direction
+
+AgentReceipt is currently a TypeScript implementation and local-first proof of concept. The long-term value may be a stable receipt envelope and signing input that other systems can emit, store, or verify.
+
+This is not a standard yet.
+
 ## Current Status
 
 - MVP

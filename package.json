@@ -4,6 +4,7 @@
   "description": "Local-first tamper-evident receipts for AI agent tool calls.",
   "type": "module",
   "private": true,
+  "license": "MIT",
   "bin": {
     "agentreceipt": "dist/src/index.js"
   },
