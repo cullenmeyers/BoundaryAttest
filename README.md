@@ -88,6 +88,8 @@ Real deployments need explicit decisions about key storage, key rotation, custod
 
 A receipt proves that the holder of the signing key produced the receipt over the included fields. It does not prove the business correctness of the action.
 
+For a future optional model that cryptographically binds caller request intent to server-attested outcomes, see `docs/caller-signed-requests.md`.
+
 ## Selective capture
 
 Do not sign every low-value diagnostic call by default. Prefer signing important state-changing or trust-boundary actions: service restarts, config edits, script executions, deploys, ticket/workflow changes, database writes, filesystem writes, browser/form actions, and cloud/infra changes.
