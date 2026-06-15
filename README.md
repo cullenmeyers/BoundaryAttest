@@ -133,6 +133,7 @@ npm run example:sink
 npm run example:mcp
 npm run example:mcp-real
 npm run example:mcp-server
+npm run example:intergrax-poc
 npm run verify -- <receiptPath>
 npm run chain:retained
 npm run prune
@@ -167,6 +168,14 @@ Trust-boundary demo:
 ```sh
 npm run example:trust-boundary
 ```
+
+Intergrax PoC proof:
+
+```sh
+npm run example:intergrax-poc
+```
+
+See `docs/integrations/intergrax-poc.md` for the public proof notes, including the `client_observed` trust role, hash matching, lineage, and why this is not server attestation.
 
 MCP-shaped educational demo:
 

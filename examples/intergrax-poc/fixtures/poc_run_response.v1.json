@@ -1,0 +1,55 @@
+{
+  "task_id": "run-<dynamic>",
+  "run_id": "run-<dynamic>",
+  "state": "completed",
+  "answer": "",
+  "agent_id": "boundary_demo_agent",
+  "boundary_events": [
+    {
+      "schema_id": "execution_boundary_event.v1",
+      "event_id": "<uuid>",
+      "boundary_type": "tool_execution",
+      "signed": false,
+      "tool_id": "records.put",
+      "agent_id": "boundary_demo_agent",
+      "run_id": "run-<dynamic>",
+      "step_id": "store_demo_record",
+      "task_id": "",
+      "tenant_id": "default",
+      "action_status": "executed",
+      "side_effects": true,
+      "risk_level": "medium",
+      "input": {
+        "partition_key": "attestation_demo",
+        "row_key": "poc-001",
+        "data": {
+          "title": "PoC report",
+          "version": 1
+        },
+        "ttl_seconds": null
+      },
+      "output": {
+        "stored": true,
+        "partition_key": "attestation_demo",
+        "row_key": "poc-001"
+      },
+      "input_hash": "sha256:abcbed6ef04e1fa9d538c02d19dd08a0f6cea55967f87fbf0b6fa84812bd97e3",
+      "output_hash": "sha256:0523e7f40600893a2eed408f2c2624ca0d6c528b761a3f20641eadd1c77cba46",
+      "occurred_at": "2026-06-13T12:00:00+00:00",
+      "lineage": {
+        "ref": "run-<dynamic>:store_demo_record",
+        "type": "execution_record"
+      },
+      "runtime_ref": {
+        "platform": "intergrax",
+        "runtime_version": "<semver>"
+      }
+    }
+  ],
+  "trust_model": {
+    "platform_signed": "false",
+    "recommended_receipt_role": "client_observed",
+    "note": "Intergrax emits unsigned boundary facts; partner signs receipts locally."
+  },
+  "metadata": {}
+}

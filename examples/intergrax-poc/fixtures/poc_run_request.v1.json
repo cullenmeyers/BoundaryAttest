@@ -1,0 +1,13 @@
+{
+  "tenant_id": "default",
+  "user_id": "partner-adapter",
+  "message": "Partner PoC sample",
+  "capability": "attestation.demo",
+  "partition_key": "attestation_demo",
+  "row_key": "poc-001",
+  "record_data": {
+    "title": "PoC report",
+    "version": 1
+  },
+  "metadata": {}
+}
