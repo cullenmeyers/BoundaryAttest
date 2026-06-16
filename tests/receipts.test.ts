@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
 import { latestReceiptHash, sortedReceipts, verifyStrictChain } from "../src/chain.js";
@@ -329,6 +329,57 @@ test("local chain verification passes with mixed client_observed and server_atte
   assert.equal(receipts[1].receipt.receipt_role, "server_attested");
   assert.equal(receipts[1].receipt.previous_receipt_hash, latestReceiptHash([receipts[0]]));
   assert.equal(result.intact, true);
+});
+
+test("receipt discovery ignores evidence sidecars next to valid receipts", async () => {
+  const wrapped = await withAgentReceipt({
+    agentId: "test-client",
+    tool: "client.sidecar",
+    input: { ok: true },
+    run: async () => ({ ok: true }),
+  });
+  assert.ok(wrapped.receiptPath);
+
+  writeFileSync(
+    `${wrapped.receiptPath}.intergrax-evidence.json`,
+    `${JSON.stringify({ receipt_id: wrapped.receipt?.receipt_id, boundary_event: { ok: true } })}\n`,
+    "utf8",
+  );
+
+  const receipts = sortedReceipts(listReceiptPaths());
+  const keyMaterial = setupKeys();
+  const result = verifyStrictChain(receipts, keyMaterial.publicKeyPem);
+
+  assert.equal(receipts.length, 1);
+  assert.equal(receipts[0].receipt.receipt_id, wrapped.receipt?.receipt_id);
+  assert.equal(result.intact, true);
+});
+
+test("receipt discovery ignores unrelated trace JSON files", async () => {
+  const wrapped = await withAgentReceipt({
+    agentId: "test-client",
+    tool: "client.trace",
+    input: { ok: true },
+    run: async () => ({ ok: true }),
+  });
+  assert.ok(wrapped.receiptPath);
+
+  writeFileSync(join("receipts", "intergrax-trace-run_demo.json"), `${JSON.stringify({ trace: true })}\n`, "utf8");
+
+  const receipts = sortedReceipts(listReceiptPaths());
+  const keyMaterial = setupKeys();
+  const result = verifyStrictChain(receipts, keyMaterial.publicKeyPem);
+
+  assert.equal(receipts.length, 1);
+  assert.equal(receipts[0].receipt.receipt_id, wrapped.receipt?.receipt_id);
+  assert.equal(result.intact, true);
+});
+
+test("receipt discovery still rejects invalid files using the receipt naming convention", () => {
+  mkdirSync("receipts", { recursive: true });
+  writeFileSync("receipts/01-2026-06-16T00-00-00-000Z-invalid-receipt.json", "{}\n", "utf8");
+
+  assert.throws(() => sortedReceipts(listReceiptPaths()), /Receipt is missing required field: receipt_id/);
 });
 
 test("concurrent LocalFileReceiptSink writes form one linear chain", async () => {

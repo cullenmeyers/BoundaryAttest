@@ -102,6 +102,12 @@ AgentReceipt is currently a TypeScript implementation and local-first proof of c
 
 This is not a standard yet.
 
+## Intergrax PoC
+
+Intergrax is an external open-source agent runtime maintained independently from AgentReceipt. Through technical collaboration with the Intergrax maintainer, AgentReceipt completed a proof of concept against a real unsigned side-effecting tool-boundary event exposed by Intergrax. The adapter mapped that event into a signed `client_observed` receipt, preserved Intergrax run and step lineage, and verification confirmed matching canonical input and output hashes between the source event and generated receipt.
+
+This demonstrated that AgentReceipt can map real external runtime evidence into its receipt format. It was a technical proof of concept, not a production deployment, paying customer relationship, formal commercial partnership, or endorsement. It was also not `server_attested`, because Intergrax did not sign the event. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
+
 ## Current Status
 
 - MVP
@@ -111,6 +117,18 @@ This is not a standard yet.
 - real local MCP SDK proof-of-concept only
 - trust-boundary demo with fake local data
 - MCP-shaped educational demo only
+
+## Current Limitations
+
+AgentReceipt is experimental and local-first. The current local signing setup is intended for development and proof-of-concept use; production deployments need an explicit key-custody model. Possible future integrations could include operating-system secure storage, managed key services, or hardware-backed keys, but no provider or implementation is committed.
+
+A valid signature proves that a particular key signed a particular receipt. It does not automatically prove that the claim is true, that the action was authorized, that the human identity is correct, that the signer's environment was uncompromised, or that the receipt provides legal non-repudiation.
+
+The current linear `previous_receipt_hash` chain is easiest to use with coordinated sequential writers. Highly concurrent or distributed environments may later need separate chains, coordination, checkpoints, or DAG-style lineage; those are future design possibilities, not promised roadmap items.
+
+Retention and pruning affect what can be verified later. Removing earlier receipts limits what can be proven about omitted history. A retained chain can prove consistency from its retained starting point, but it cannot prove that no earlier or omitted receipts existed.
+
+Hash-based evidence helps verify that later-provided input, output, or error evidence matches what was originally receipted. Hashes do not reveal or recover the original input or output. Verification requires access to the original evidence and the same canonicalization rules.
 
 ## Commands
 

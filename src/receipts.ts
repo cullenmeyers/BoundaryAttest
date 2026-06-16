@@ -82,6 +82,12 @@ export type CreateReceiptOptions = {
   timestamp?: string;
 };
 
+const RECEIPT_FILE_NAME = /^\d{2,}-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[^.]+-[^.]+\.json$/;
+
+export function isReceiptFileName(fileName: string): boolean {
+  return RECEIPT_FILE_NAME.test(fileName);
+}
+
 export function receiptHash(receipt: Receipt): string {
   return sha256(stableJson(receipt));
 }
@@ -157,7 +163,7 @@ export function writeReceipt(receipt: Receipt, position?: number): string {
 export function listReceiptPaths(): string[] {
   ensureDirectories();
   return readdirSync(RECEIPT_DIR)
-    .filter((file) => file.endsWith(".json"))
+    .filter(isReceiptFileName)
     .map((file) => join(RECEIPT_DIR, file));
 }
 

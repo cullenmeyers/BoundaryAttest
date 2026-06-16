@@ -1,7 +1,6 @@
-import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { CONFIG_PATH, RECEIPT_DIR } from "./paths.js";
-import { parseReceipt, type Receipt } from "./receipts.js";
+import { listReceiptPaths, parseReceipt, type Receipt } from "./receipts.js";
 
 export type RetentionConfig = {
   maxAgeDays: number;
@@ -52,9 +51,7 @@ function listExistingReceiptFiles(): string[] {
     return [];
   }
 
-  return readdirSync(RECEIPT_DIR)
-    .filter((file) => file.endsWith(".json"))
-    .map((file) => join(RECEIPT_DIR, file));
+  return listReceiptPaths();
 }
 
 function sortByTimestamp(receipts: ReceiptFile[]): ReceiptFile[] {

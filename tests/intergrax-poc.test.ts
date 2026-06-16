@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
 import {
@@ -9,6 +12,7 @@ import {
   type IntergraxRunResponse,
 } from "../examples/intergrax-poc/adapter.js";
 import { hashValue } from "../src/hash.js";
+import { createSignedReceipt, writeReceipt } from "../src/receipts.js";
 import { verifyReceipt } from "../src/signing.js";
 
 const repoRoot = process.cwd();
@@ -18,6 +22,28 @@ let testDir: string | null = null;
 
 function loadFixture(): IntergraxRunResponse {
   return JSON.parse(readFileSync(fixturePath, "utf8")) as IntergraxRunResponse;
+}
+
+function runNodeScript(scriptPath: string, env: NodeJS.ProcessEnv): Promise<{ code: number | null; output: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [scriptPath], {
+      cwd: process.cwd(),
+      env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let output = "";
+
+    child.stdout.on("data", (chunk) => {
+      output += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      output += String(chunk);
+    });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      resolve({ code, output });
+    });
+  });
 }
 
 beforeEach(() => {
@@ -106,4 +132,59 @@ test("maps Intergrax lineage into receipt lineage fields", () => {
 
   assert.equal(receipt.lineage_ref, "run-<dynamic>:store_demo_record");
   assert.equal(receipt.lineage_type, "execution_record");
+});
+
+test("Intergrax example succeeds with existing sidecar and trace JSON in receipts directory", async () => {
+  const requestFixture = readFileSync(
+    join(repoRoot, "examples", "intergrax-poc", "fixtures", "poc_run_request.v1.json"),
+    "utf8",
+  );
+  const responseFixture = readFileSync(fixturePath, "utf8");
+  mkdirSync(join("examples", "intergrax-poc", "fixtures"), { recursive: true });
+  writeFileSync(join("examples", "intergrax-poc", "fixtures", "poc_run_request.v1.json"), requestFixture, "utf8");
+
+  const existingReceipt = createSignedReceipt({
+    agentId: "existing-agent",
+    tool: "existing.tool",
+    actionStatus: "executed",
+    input: { before: true },
+    output: { before: true },
+    previousReceiptHash: null,
+  });
+  const existingReceiptPath = writeReceipt(existingReceipt);
+  writeFileSync(
+    `${existingReceiptPath}.intergrax-evidence.json`,
+    `${JSON.stringify({ receipt_id: existingReceipt.receipt_id, evidence: true })}\n`,
+    "utf8",
+  );
+  writeFileSync(join("receipts", "intergrax-trace-run_demo.json"), `${JSON.stringify({ trace: true })}\n`, "utf8");
+
+  const server = createServer((request, response) => {
+    if (request.method === "POST" && request.url === "/v1/attestation_demo/poc/run") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(responseFixture);
+      return;
+    }
+
+    response.writeHead(404, { "Content-Type": "text/plain" });
+    response.end("not found");
+  });
+
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const address = server.address() as AddressInfo;
+    const result = await runNodeScript(join(repoRoot, "dist", "examples", "intergrax-poc", "run.js"), {
+      ...process.env,
+      INTERGRAX_BASE_URL: `http://127.0.0.1:${address.port}`,
+    });
+
+    assert.equal(result.code, 0, result.output);
+    assert.match(result.output, /verification: valid/);
+    assert.match(result.output, /receipt_role: client_observed/);
+    assert.match(result.output, /hash_input: match/);
+    assert.match(result.output, /hash_output: match/);
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
 });
