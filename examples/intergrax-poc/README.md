@@ -4,12 +4,12 @@ This is the smallest AgentReceipt adapter for the Intergrax `attestation_demo` p
 
 ## Start Intergrax
 
-Use the Intergrax runbook at commit `c457037c` on branch `agent_experiment_runtime`:
+Use the Intergrax PoC v2 runbook at commit `106aee77` (or newer) on branch `agent_experiment_runtime`:
 
 ```powershell
 git clone https://github.com/jakbuczarnecki/intergrax
 cd intergrax
-git checkout c457037c
+git checkout agent_experiment_runtime
 copy applications\attestation_demo\.env.example applications\attestation_demo\.env
 applications\attestation_demo\docker\build-docker.bat
 docker run --rm --name attestation-demo --env-file applications/attestation_demo/.env -p 8097:8097 attestation-demo
@@ -24,7 +24,9 @@ npm run build
 npm run example:intergrax-poc
 ```
 
-The adapter posts `fixtures/poc_run_request.v1.json`, reads `boundary_events[]`, accepts only `execution_boundary_event.v1`, creates a local `client_observed` receipt, writes it through `LocalFileReceiptSink`, verifies it, and prints the receipt path, evidence sidecar path, verification result, `run_id`, `step_id`, and hash comparison results.
+The adapter posts `fixtures/poc_run_request.v1.json`, orders all supported `boundary_events[]` by `event_sequence`, and creates one local `client_observed` receipt per event. A successful PoC v2 run produces separate `tool_execution` and `harness_step` receipts. Each receipt is written through `LocalFileReceiptSink`, verified independently, and linked to an evidence sidecar by `event_id`.
+
+`event_id`, `event_sequence`, `boundary_type`, `run_id`, `step_id`, policy verdicts, step outcome, and the original Intergrax action status are preserved in metadata/evidence. `lineage.ref` is mapped into receipt lineage. Because AgentReceipt's existing action status vocabulary does not include `completed`, harness `completed` maps to receipt status `success`; the original value remains `source_action_status: "completed"`. A harness event has no `tool_id`, so it maps to the adapter label `intergrax.harness_step`.
 
 ## What The Receipt Proves
 

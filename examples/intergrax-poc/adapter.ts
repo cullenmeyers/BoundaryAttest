@@ -25,6 +25,7 @@ export type IntergraxLineage = {
 export type IntergraxBoundaryEvent = {
   schema_id: string;
   event_id?: string;
+  event_sequence?: number;
   boundary_type?: string;
   signed?: boolean;
   tool_id?: string;
@@ -38,8 +39,11 @@ export type IntergraxBoundaryEvent = {
   risk_level?: string;
   input?: unknown;
   output?: unknown;
-  input_hash?: string;
-  output_hash?: string;
+  input_hash?: string | null;
+  output_hash?: string | null;
+  error_message?: string | null;
+  policy_verdicts?: unknown[];
+  step_outcome?: unknown;
   occurred_at?: string;
   lineage?: IntergraxLineage;
   runtime_ref?: unknown;
@@ -96,9 +100,44 @@ function mapActionStatus(status: string | undefined): ActionStatus {
     case "success":
     case "failure":
       return status;
+    case "completed":
+      return "success";
     default:
       throw new Error(`Unsupported Intergrax action_status: ${status ?? "<missing>"}`);
   }
+}
+
+function mapTool(event: IntergraxBoundaryEvent): string {
+  if (event.boundary_type === "tool_execution") {
+    return requireString(event.tool_id, "tool_id");
+  }
+
+  if (event.boundary_type === "harness_step") {
+    return "intergrax.harness_step";
+  }
+
+  throw new Error(`Unsupported Intergrax boundary_type: ${event.boundary_type ?? "<missing>"}`);
+}
+
+function requireEventSequence(value: number | undefined): number {
+  if (!Number.isSafeInteger(value) || (value ?? 0) < 1) {
+    throw new Error(`Intergrax event has invalid event_sequence: ${value ?? "<missing>"}`);
+  }
+
+  return value as number;
+}
+
+function mapTimestamp(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.valueOf())) {
+    throw new Error(`Intergrax event has invalid occurred_at: ${value}`);
+  }
+
+  return parsed.toISOString();
 }
 
 function mapLineage(lineage: IntergraxLineage | undefined): LineageMetadata | undefined {
@@ -134,8 +173,8 @@ function isLineageType(value: string | undefined): value is LineageType {
   );
 }
 
-function comparableDigest(intergraxHash: string | undefined): { digest: string | null; reason?: string } {
-  if (intergraxHash === undefined || intergraxHash === "") {
+function comparableDigest(intergraxHash: string | null | undefined): { digest: string | null; reason?: string } {
+  if (intergraxHash === undefined || intergraxHash === null || intergraxHash === "") {
     return { digest: null, reason: "Intergrax hash is missing" };
   }
 
@@ -159,7 +198,7 @@ function comparableDigest(intergraxHash: string | undefined): { digest: string |
 export function compareIntergraxHash(
   field: "input" | "output",
   value: unknown,
-  intergraxHash: string | undefined,
+  intergraxHash: string | null | undefined,
 ): HashComparison {
   const agentReceiptHash = hashValue(value);
   const comparable = comparableDigest(intergraxHash);
@@ -185,17 +224,23 @@ export function compareIntergraxHash(
 
 export function mapIntergraxEventToReceiptOptions(
   event: IntergraxBoundaryEvent,
-  response: Pick<IntergraxRunResponse, "trust_model" | "metadata"> = {},
+  response: Pick<IntergraxRunResponse, "run_id" | "task_id" | "trust_model" | "metadata"> = {},
 ): IntergraxReceiptMapping {
   if (event.schema_id !== EXECUTION_BOUNDARY_SCHEMA_ID) {
     throw new Error(`Unsupported Intergrax boundary event schema: ${event.schema_id}`);
   }
 
+  const eventId = requireString(event.event_id, "event_id");
+  const eventSequence = requireEventSequence(event.event_sequence);
+  const boundaryType = requireString(event.boundary_type, "boundary_type");
   const toolMetadata: JsonObject = {
     source: "intergrax",
     source_schema_id: event.schema_id,
-    event_id: event.event_id ?? null,
-    boundary_type: event.boundary_type ?? null,
+    source_event_key: eventId,
+    event_id: eventId,
+    event_sequence: eventSequence,
+    boundary_type: boundaryType,
+    source_action_status: event.action_status ?? null,
     intergrax_signed: event.signed === true,
     run_id: event.run_id ?? null,
     step_id: event.step_id ?? null,
@@ -205,6 +250,9 @@ export function mapIntergraxEventToReceiptOptions(
     risk_level: event.risk_level ?? null,
     input_hash: event.input_hash ?? null,
     output_hash: event.output_hash ?? null,
+    error_message: event.error_message ?? null,
+    policy_verdicts: event.policy_verdicts ?? [],
+    step_outcome: event.step_outcome ?? null,
     runtime_ref: event.runtime_ref ?? null,
     trust_model: response.trust_model ?? null,
     response_metadata: response.metadata ?? null,
@@ -215,11 +263,12 @@ export function mapIntergraxEventToReceiptOptions(
   return {
     receiptOptions: {
       agentId: requireString(event.agent_id, "agent_id"),
-      tool: requireString(event.tool_id, "tool_id"),
+      tool: mapTool(event),
       actionStatus: mapActionStatus(event.action_status),
       input: event.input,
       output: event.output,
-      timestamp: event.occurred_at,
+      error: event.error_message ?? undefined,
+      timestamp: mapTimestamp(event.occurred_at),
       receiptRole: "client_observed",
       toolMetadata,
       lineage: mapLineage(event.lineage),
@@ -238,7 +287,7 @@ export function mapIntergraxEventToReceiptOptions(
 
 export function createReceiptFromIntergraxEvent(
   event: IntergraxBoundaryEvent,
-  response: Pick<IntergraxRunResponse, "trust_model" | "metadata"> = {},
+  response: Pick<IntergraxRunResponse, "run_id" | "task_id" | "trust_model" | "metadata"> = {},
   previousReceiptHash: string | null = null,
 ): { receipt: Receipt; mapping: IntergraxReceiptMapping } {
   const mapping = mapIntergraxEventToReceiptOptions(event, response);
@@ -253,7 +302,7 @@ export function createReceiptFromIntergraxEvent(
 
 export async function persistIntergraxEventReceipt(
   event: IntergraxBoundaryEvent,
-  response: Pick<IntergraxRunResponse, "trust_model" | "metadata"> = {},
+  response: Pick<IntergraxRunResponse, "run_id" | "task_id" | "trust_model" | "metadata"> = {},
   sink = new LocalFileReceiptSink(),
 ): Promise<PersistedIntergraxReceipt> {
   const mapping = mapIntergraxEventToReceiptOptions(event, response);
@@ -270,6 +319,9 @@ export async function persistIntergraxEventReceipt(
       `${JSON.stringify(
         {
           receipt_id: receipt.receipt_id,
+          event_id: requireString(event.event_id, "event_id"),
+          event_sequence: requireEventSequence(event.event_sequence),
+          boundary_type: requireString(event.boundary_type, "boundary_type"),
           tool_metadata_hash: receipt.tool_metadata_hash,
           tool_metadata: mapping.toolMetadata,
           boundary_event: event,
@@ -293,5 +345,20 @@ export async function persistIntergraxEventReceipt(
 }
 
 export function executionBoundaryEvents(response: IntergraxRunResponse): IntergraxBoundaryEvent[] {
-  return (response.boundary_events ?? []).filter((event) => event.schema_id === EXECUTION_BOUNDARY_SCHEMA_ID);
+  return (response.boundary_events ?? [])
+    .filter((event) => event.schema_id === EXECUTION_BOUNDARY_SCHEMA_ID)
+    .sort((left, right) => requireEventSequence(left.event_sequence) - requireEventSequence(right.event_sequence));
+}
+
+export async function persistIntergraxRunReceipts(
+  response: IntergraxRunResponse,
+  sink = new LocalFileReceiptSink(),
+): Promise<PersistedIntergraxReceipt[]> {
+  const persisted: PersistedIntergraxReceipt[] = [];
+
+  for (const event of executionBoundaryEvents(response)) {
+    persisted.push(await persistIntergraxEventReceipt(event, response, sink));
+  }
+
+  return persisted;
 }

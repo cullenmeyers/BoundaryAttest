@@ -8,7 +8,9 @@ import { afterEach, beforeEach, test } from "node:test";
 import {
   compareIntergraxHash,
   createReceiptFromIntergraxEvent,
+  executionBoundaryEvents,
   mapIntergraxEventToReceiptOptions,
+  persistIntergraxRunReceipts,
   type IntergraxRunResponse,
 } from "../examples/intergrax-poc/adapter.js";
 import { hashValue } from "../src/hash.js";
@@ -16,12 +18,23 @@ import { createSignedReceipt, writeReceipt } from "../src/receipts.js";
 import { verifyReceipt } from "../src/signing.js";
 
 const repoRoot = process.cwd();
-const fixturePath = join(repoRoot, "examples", "intergrax-poc", "fixtures", "poc_run_response.v1.json");
+const fixturePath = join(repoRoot, "examples", "intergrax-poc", "fixtures", "poc_run_response.v2.json");
+const failedFixturePath = join(
+  repoRoot,
+  "examples",
+  "intergrax-poc",
+  "fixtures",
+  "poc_run_response.failed.v2.json",
+);
 let originalCwd = process.cwd();
 let testDir: string | null = null;
 
 function loadFixture(): IntergraxRunResponse {
   return JSON.parse(readFileSync(fixturePath, "utf8")) as IntergraxRunResponse;
+}
+
+function loadFailedFixture(): IntergraxRunResponse {
+  return JSON.parse(readFileSync(failedFixturePath, "utf8")) as IntergraxRunResponse;
 }
 
 function runNodeScript(scriptPath: string, env: NodeJS.ProcessEnv): Promise<{ code: number | null; output: string }> {
@@ -79,6 +92,61 @@ test("maps documented execution boundary event into a valid signed receipt", () 
   assert.equal(verifyReceipt(receipt), true);
 });
 
+test("creates and independently verifies one receipt per successful v2 boundary event", () => {
+  const response = loadFixture();
+  const events = executionBoundaryEvents(response);
+  const mapped = events.map((event) => createReceiptFromIntergraxEvent(event, response));
+
+  assert.equal(mapped.length, 2);
+  assert.deepEqual(events.map((event) => event.event_id), ["event-tool-success", "event-harness-success"]);
+  assert.deepEqual(events.map((event) => event.event_sequence), [1, 2]);
+  assert.deepEqual(events.map((event) => event.boundary_type), ["tool_execution", "harness_step"]);
+  assert.deepEqual(mapped.map(({ receipt }) => receipt.receipt_role), ["client_observed", "client_observed"]);
+  assert.deepEqual(mapped.map(({ receipt }) => receipt.tool), ["records.put", "intergrax.harness_step"]);
+  assert.deepEqual(mapped.map(({ receipt }) => receipt.action_status), ["executed", "success"]);
+  assert.ok(mapped.every(({ receipt }) => verifyReceipt(receipt)));
+
+  for (const [index, { mapping }] of mapped.entries()) {
+    assert.equal(mapping.toolMetadata.event_id, events[index].event_id);
+    assert.equal(mapping.toolMetadata.source_event_key, events[index].event_id);
+    assert.equal(mapping.toolMetadata.event_sequence, events[index].event_sequence);
+    assert.equal(mapping.toolMetadata.boundary_type, events[index].boundary_type);
+    assert.equal(mapping.hashComparisons.every((comparison) => comparison.status === "match"), true);
+  }
+});
+
+test("orders boundary events by event_sequence", () => {
+  const response = loadFixture();
+  response.boundary_events?.reverse();
+
+  assert.deepEqual(executionBoundaryEvents(response).map((event) => event.event_sequence), [1, 2]);
+});
+
+test("represents failed tool and completed harness as separate valid claims", () => {
+  const response = loadFailedFixture();
+  const events = executionBoundaryEvents(response);
+  const mapped = events.map((event) => createReceiptFromIntergraxEvent(event, response));
+
+  assert.equal(mapped.length, 2);
+  assert.deepEqual(events.map((event) => event.boundary_type), ["tool_execution", "harness_step"]);
+  assert.deepEqual(mapped.map(({ receipt }) => receipt.action_status), ["failed", "success"]);
+  assert.equal(mapped[0].receipt.error_hash?.length, 64);
+  assert.equal(mapped[1].mapping.toolMetadata.source_action_status, "completed");
+  assert.ok(mapped.every(({ receipt }) => receipt.receipt_role === "client_observed" && verifyReceipt(receipt)));
+});
+
+test("persists stable event identifiers in separate evidence mappings", async () => {
+  const persisted = await persistIntergraxRunReceipts(loadFixture());
+
+  assert.equal(persisted.length, 2);
+  assert.ok(persisted.every((item) => item.verificationValid));
+  const evidence = persisted.map((item) => JSON.parse(readFileSync(item.evidencePath ?? "", "utf8")) as Record<string, unknown>);
+  assert.deepEqual(evidence.map((item) => item.event_id), ["event-tool-success", "event-harness-success"]);
+  assert.deepEqual(evidence.map((item) => item.event_sequence), [1, 2]);
+  assert.deepEqual(evidence.map((item) => item.boundary_type), ["tool_execution", "harness_step"]);
+  assert.equal(new Set(evidence.map((item) => item.receipt_id)).size, 2);
+});
+
 test("enforces client_observed role for Intergrax PoC receipts", () => {
   const response = loadFixture();
   const event = response.boundary_events?.[0];
@@ -114,13 +182,15 @@ test("compares AgentReceipt canonical hashes with Intergrax hashes", () => {
   assert.match(fixtureComparison.reason ?? "", /expected sha256:<64 hex>/);
 });
 
-test("sanitized fixture includes matching Intergrax input and output hashes", () => {
+test("sanitized fixture includes matching Intergrax input and output hashes for both events", () => {
   const response = loadFixture();
-  const event = response.boundary_events?.[0];
-  assert.ok(event);
+  const events = executionBoundaryEvents(response);
 
-  assert.equal(compareIntergraxHash("input", event.input, event.input_hash).status, "match");
-  assert.equal(compareIntergraxHash("output", event.output, event.output_hash).status, "match");
+  assert.equal(events.length, 2);
+  for (const event of events) {
+    assert.equal(compareIntergraxHash("input", event.input, event.input_hash).status, "match");
+    assert.equal(compareIntergraxHash("output", event.output, event.output_hash).status, "match");
+  }
 });
 
 test("maps Intergrax lineage into receipt lineage fields", () => {
@@ -130,7 +200,7 @@ test("maps Intergrax lineage into receipt lineage fields", () => {
 
   const { receipt } = createReceiptFromIntergraxEvent(event, response);
 
-  assert.equal(receipt.lineage_ref, "run-<dynamic>:store_demo_record");
+  assert.equal(receipt.lineage_ref, "run-v2-success:store_demo_record");
   assert.equal(receipt.lineage_type, "execution_record");
 });
 
@@ -180,10 +250,17 @@ test("Intergrax example succeeds with existing sidecar and trace JSON in receipt
     });
 
     assert.equal(result.code, 0, result.output);
+    assert.match(result.output, /receipt_count: 2/);
     assert.match(result.output, /verification: valid/);
     assert.match(result.output, /receipt_role: client_observed/);
     assert.match(result.output, /hash_input: match/);
     assert.match(result.output, /hash_output: match/);
+    assert.match(result.output, /event_id: event-tool-success/);
+    assert.match(result.output, /event_id: event-harness-success/);
+    assert.match(result.output, /event_sequence: 1/);
+    assert.match(result.output, /event_sequence: 2/);
+    assert.match(result.output, /boundary_type: tool_execution/);
+    assert.match(result.output, /boundary_type: harness_step/);
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }

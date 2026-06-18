@@ -3,7 +3,7 @@ import { join } from "node:path";
 import {
   EXECUTION_BOUNDARY_SCHEMA_ID,
   executionBoundaryEvents,
-  persistIntergraxEventReceipt,
+  persistIntergraxRunReceipts,
   type HashComparison,
   type IntergraxRunResponse,
 } from "./adapter.js";
@@ -60,13 +60,19 @@ async function main(): Promise<void> {
     throw new Error(`No ${EXECUTION_BOUNDARY_SCHEMA_ID} events found in Intergrax response`);
   }
 
-  for (const event of events) {
-    const persisted = await persistIntergraxEventReceipt(event, response);
+  const receipts = await persistIntergraxRunReceipts(response);
+  console.log(`receipt_count: ${receipts.length}`);
+
+  for (const [index, persisted] of receipts.entries()) {
+    const event = events[index];
     console.log(`receipt_path: ${persisted.receiptPath ?? "<none>"}`);
     console.log(`evidence_path: ${persisted.evidencePath ?? "<none>"}`);
     console.log(`verification: ${persisted.verificationValid ? "valid" : "invalid"}`);
     console.log(`run_id: ${event.run_id ?? response.run_id ?? "<missing>"}`);
     console.log(`step_id: ${event.step_id ?? "<missing>"}`);
+    console.log(`event_id: ${event.event_id ?? "<missing>"}`);
+    console.log(`event_sequence: ${event.event_sequence ?? "<missing>"}`);
+    console.log(`boundary_type: ${event.boundary_type ?? "<missing>"}`);
     console.log(`receipt_role: ${persisted.receipt.receipt_role}`);
     for (const comparison of persisted.hashComparisons) {
       console.log(`hash_${formatHashComparison(comparison)}`);

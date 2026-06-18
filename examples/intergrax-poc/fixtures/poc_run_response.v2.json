@@ -1,0 +1,75 @@
+{
+  "task_id": "run-v2-success",
+  "run_id": "run-v2-success",
+  "state": "completed",
+  "answer": "stored record attestation_demo/poc-001",
+  "agent_id": "boundary_demo_agent",
+  "boundary_events": [
+    {
+      "schema_id": "execution_boundary_event.v1",
+      "event_id": "event-tool-success",
+      "event_sequence": 1,
+      "boundary_type": "tool_execution",
+      "signed": false,
+      "tool_id": "records.put",
+      "agent_id": "boundary_demo_agent",
+      "run_id": "run-v2-success",
+      "step_id": "store_demo_record",
+      "task_id": "run-v2-success",
+      "tenant_id": "default",
+      "action_status": "executed",
+      "side_effects": true,
+      "risk_level": "medium",
+      "input": {
+        "partition_key": "attestation_demo",
+        "row_key": "poc-001",
+        "data": { "title": "PoC report", "version": 1 },
+        "ttl_seconds": null
+      },
+      "output": { "stored": true, "partition_key": "attestation_demo", "row_key": "poc-001" },
+      "input_hash": "sha256:abcbed6ef04e1fa9d538c02d19dd08a0f6cea55967f87fbf0b6fa84812bd97e3",
+      "output_hash": "sha256:0523e7f40600893a2eed408f2c2624ca0d6c528b761a3f20641eadd1c77cba46",
+      "error_message": null,
+      "policy_verdicts": [],
+      "step_outcome": null,
+      "occurred_at": "2026-06-18T12:00:00+00:00",
+      "lineage": { "ref": "run-v2-success:store_demo_record", "type": "execution_record" },
+      "runtime_ref": { "platform": "intergrax", "runtime_version": "poc-v2" }
+    },
+    {
+      "schema_id": "execution_boundary_event.v1",
+      "event_id": "event-harness-success",
+      "event_sequence": 2,
+      "boundary_type": "harness_step",
+      "signed": false,
+      "tool_id": null,
+      "agent_id": "boundary_demo_agent",
+      "run_id": "run-v2-success",
+      "step_id": "store_demo_record",
+      "task_id": "run-v2-success",
+      "tenant_id": "default",
+      "action_status": "completed",
+      "side_effects": null,
+      "risk_level": null,
+      "input": { "step_index": 0, "step_id": "store_demo_record" },
+      "output": { "status": "completed", "next_action": "continue", "error_code": null, "outcome_applied": true },
+      "input_hash": "sha256:f970d74f75a6ea7d7317149d246f0d98fd5a9ca904a583b0aad9ffb7ef282c87",
+      "output_hash": "sha256:225b4933bb3983887db867ecdfc179b96863b4bbf96879a23c605792adad51b2",
+      "error_message": null,
+      "policy_verdicts": [
+        { "phase": "pre", "action": "allow", "reason": "pre_llm_default_allow", "policy_rule_id": "default.pre_llm_allow" },
+        { "phase": "post", "action": "allow", "reason": "pre_output_default_allow", "policy_rule_id": "default.pre_output_allow" }
+      ],
+      "step_outcome": { "status": "completed", "next_action": "continue", "error_code": null, "outcome_applied": true },
+      "occurred_at": "2026-06-18T12:00:01+00:00",
+      "lineage": { "ref": "run-v2-success:store_demo_record:harness_step", "type": "execution_record" },
+      "runtime_ref": { "platform": "intergrax", "runtime_version": "poc-v2" }
+    }
+  ],
+  "trust_model": {
+    "platform_signed": "false",
+    "recommended_receipt_role": "client_observed",
+    "note": "Intergrax emits unsigned boundary facts; partner signs receipts locally."
+  },
+  "metadata": {}
+}

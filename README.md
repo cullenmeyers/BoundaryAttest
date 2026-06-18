@@ -104,7 +104,7 @@ This is not a standard yet.
 
 ## Intergrax PoC
 
-Intergrax is an external open-source agent runtime maintained independently from AgentReceipt. Through technical collaboration with the Intergrax maintainer, AgentReceipt completed a proof of concept against a real unsigned side-effecting tool-boundary event exposed by Intergrax. The adapter mapped that event into a signed `client_observed` receipt, preserved Intergrax run and step lineage, and verification confirmed matching canonical input and output hashes between the source event and generated receipt.
+Intergrax is an external open-source agent runtime maintained independently from AgentReceipt. Through technical collaboration with the Intergrax maintainer, AgentReceipt completed a proof of concept against unsigned tool and harness boundary events exposed by Intergrax. The adapter creates one signed `client_observed` receipt per event, preserves stable event identity, ordering, boundary type, run/step grouping, and lineage, and independently verifies each receipt and comparable canonical hash.
 
 This demonstrated that AgentReceipt can map real external runtime evidence into its receipt format. It was a technical proof of concept, not a production deployment, paying customer relationship, formal commercial partnership, or endorsement. It was also not `server_attested`, because Intergrax did not sign the event. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
 
