@@ -1,14 +1,14 @@
 # Limitations
 
-AgentReceipt is experimental local-first software.
+BoundaryAttest is experimental local-first software.
 
-AgentReceipt receipts are tamper-evident local records, not a security guarantee.
+BoundaryAttest receipts are tamper-evident local records, not a security guarantee.
 
 It is not compliance software and should not be used as a legal, regulatory, or compliance-grade audit system.
 
 It does not prove that an agent made a correct decision. It also does not prove that an external tool actually performed the claimed action.
 
-Receipt hashes prove the same input/output can be matched later, not that the action was correct or useful.
+Receipt hashes let the same input/output be matched later; they do not establish that the action was correct or useful.
 
 Failed receipts store `error_hash` by default, not raw private error content.
 
@@ -20,9 +20,9 @@ Pruning deletes local receipt files.
 
 Pruning can remove historical chain context.
 
-AgentReceipt does not yet support permanent archival/checkpointing.
+BoundaryAttest does not yet support permanent archival/checkpointing.
 
-Retained-chain verification only proves the remaining receipt segment is intact.
+Retained-chain verification only checks that the remaining receipt segment is intact.
 
 Hosted/archival storage is not implemented.
 
@@ -36,7 +36,7 @@ Multi-process/distributed chain consistency is not solved yet.
 
 Production systems with multiple writers should use a durable coordinated sink.
 
-AgentReceipt does not yet support cross-sink or global chain verification.
+BoundaryAttest does not yet support cross-sink or global chain verification.
 
 No vendor integrations are included yet.
 
@@ -44,7 +44,7 @@ Console and memory sinks are for demo/testing, not durable audit storage.
 
 `receiptPolicy` is not a permission system and does not approve or block actions.
 
-AgentReceipt works where a developer can wrap or intercept the tool-call boundary.
+BoundaryAttest works where a developer can wrap or intercept the tool-call boundary.
 
 It does not automatically attach to closed agent platforms.
 
@@ -84,13 +84,13 @@ There is no formal receipt standard yet.
 
 Server receipts are only as trustworthy as the server key and runtime.
 
-AgentReceipt does not verify caller identity by itself.
+BoundaryAttest does not verify caller identity by itself.
 
 Caller metadata is only as trustworthy as the host system that supplied it.
 
 `caller_id` is only as trustworthy as the host system that supplied it.
 
-AgentReceipt does not verify upstream proposal, ticket, approval, workflow, or execution records by itself.
+BoundaryAttest does not verify upstream proposal, ticket, approval, workflow, or execution records by itself.
 
 `lineage_ref` and `lineage_hash` are only as trustworthy as the host system that supplied them.
 
@@ -108,4 +108,4 @@ There is no hosted receipt storage yet.
 
 Old receipts may not verify if keys are deleted and public/private key material is not preserved.
 
-This MVP only proves that the receipt file matches the signed action record and that the chain links match the receipt files present locally.
+This MVP only checks that the receipt file matches the signed action record and that the chain links match the receipt files present locally.

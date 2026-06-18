@@ -184,7 +184,7 @@ function main(): void {
         commandPrune();
         break;
       default:
-        console.log("AgentReceipt local CLI");
+        console.log("BoundaryAttest local CLI");
         console.log("Commands:");
         console.log("  npm run setup");
         console.log("  npm run demo");

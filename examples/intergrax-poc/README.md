@@ -1,6 +1,6 @@
 # Intergrax PoC Adapter
 
-This is the smallest AgentReceipt adapter for the Intergrax `attestation_demo` partner handoff.
+This is the smallest BoundaryAttest adapter for the live Intergrax `attestation_demo` PoC. BoundaryAttest was previously called AgentReceipt during early PoC work.
 
 ## Start Intergrax
 
@@ -26,11 +26,11 @@ npm run example:intergrax-poc
 
 The adapter posts `fixtures/poc_run_request.v1.json`, orders all supported `boundary_events[]` by `event_sequence`, and creates one local `client_observed` receipt per event. A successful PoC v2 run produces separate `tool_execution` and `harness_step` receipts. Each receipt is written through `LocalFileReceiptSink`, verified independently, and linked to an evidence sidecar by `event_id`.
 
-`event_id`, `event_sequence`, `boundary_type`, `run_id`, `step_id`, policy verdicts, step outcome, and the original Intergrax action status are preserved in metadata/evidence. `lineage.ref` is mapped into receipt lineage. Because AgentReceipt's existing action status vocabulary does not include `completed`, harness `completed` maps to receipt status `success`; the original value remains `source_action_status: "completed"`. A harness event has no `tool_id`, so it maps to the adapter label `intergrax.harness_step`.
+`event_id`, `event_sequence`, `boundary_type`, `run_id`, `step_id`, policy verdicts, step outcome, and the original Intergrax action status are preserved in metadata/evidence. `lineage.ref` is mapped into receipt lineage. Because BoundaryAttest's existing action status vocabulary does not include `completed`, harness `completed` maps to receipt status `success`; the original value remains `source_action_status: "completed"`. A harness event has no `tool_id`, so it maps to the adapter label `intergrax.harness_step`.
 
-## What The Receipt Proves
+## What The Receipt Attests
 
-The generated receipt proves that this local AgentReceipt adapter received a specific Intergrax boundary event payload, hashed the received input/output with AgentReceipt canonical hashing, signed the receipt locally, and linked it into the local receipt chain.
+The generated receipt is a signed `client_observed` claim that this local BoundaryAttest adapter received a specific Intergrax boundary event payload and hashed the received input/output with BoundaryAttest canonical hashing. Local verification checks its signature and link into the local receipt chain.
 
 ## What It Does Not Prove
 

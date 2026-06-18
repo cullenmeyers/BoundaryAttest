@@ -1,17 +1,19 @@
-# AgentReceipt
+# BoundaryAttest
 
-AgentReceipt creates structured, verifiable action records for AI agent/MCP tool calls that cross trust boundaries.
+BoundaryAttest creates portable signed attestations for consequential agent actions crossing trust boundaries.
 
-Normal logs and OpenTelemetry are usually enough for internal debugging and monitoring. AgentReceipt is for cases where a portable, signed action record may need to be verified later: multi-agent workflows, org-to-org workflows, delegated agents, business record changes, document publishing, commerce/dispute scenarios, and high-value or hard-to-reverse actions.
+Signed boundary records for agent actions.
 
-When an agent calls a tool, AgentReceipt can:
+Normal logs and OpenTelemetry are usually enough for internal debugging and monitoring. BoundaryAttest is for cases where a portable attestation may need to be checked later: multi-agent workflows, org-to-org workflows, delegated agents, business record changes, document publishing, commerce/dispute scenarios, and high-value or hard-to-reverse actions.
+
+When an agent calls a tool, BoundaryAttest can:
 
 - hash the input
 - run the tool
 - hash the output or error
 - sign a receipt
 - chain the receipt to previous receipts
-- verify later that the receipt chain is intact
+- check later that the receipt chain is intact
 
 ## Best Conceptual Demo
 
@@ -23,7 +25,7 @@ npm run example:trust-boundary
 
 The trust-boundary demo uses the official MCP TypeScript SDK with local in-memory transport and fake local data. It shows side-effecting business-style actions where a server attests that caller `X` invoked tool `Y` with args `Z` and returned result `R`.
 
-The `echo.message` and `math.add` demos prove the plumbing. The trust-boundary demo shows the intended use case.
+The `echo.message` and `math.add` demos exercise the plumbing. The trust-boundary demo shows the intended use case.
 
 ## 30-Second Demo
 
@@ -58,13 +60,13 @@ These tools run only inside the local MCP SDK demo. They do not touch real files
 
 ## Why This Matters
 
-As AI agents call more tools across boundaries, developers need a lightweight way to prove what happened without storing private raw inputs or outputs. AgentReceipt records hashes, signatures, timestamps, caller metadata when supplied, and chain links so receipts can be checked later.
+As AI agents call more tools across boundaries, developers need a lightweight way to preserve signed claims about consequential actions without storing private raw inputs or outputs. BoundaryAttest records hashes, signatures, timestamps, caller metadata when supplied, and chain links so receipts can be checked later.
 
 ## Portable execution evidence
 
-AgentReceipt is not a replacement for logs, tracing, Git history, cloud audit trails, provider audit logs, or approval systems. Those systems are still the right source of truth for ordinary debugging, platform operations, access history, and workflow enforcement.
+BoundaryAttest is not a replacement for logs, tracing, Git history, cloud audit trails, provider audit logs, or approval systems. Those systems are still the right source of truth for ordinary debugging, platform operations, access history, and workflow enforcement.
 
-AgentReceipt is a portable signed record for agent/tool actions that may need to be verified outside the original runtime.
+BoundaryAttest creates portable signed attestations for consequential agent actions crossing trust boundaries.
 
 Strong use cases include:
 
@@ -84,9 +86,9 @@ Weak use cases include:
 
 `server_attested` receipts are only as trustworthy as the server key and runtime. The local demo key in `.agentreceipt` is not production key management.
 
-Real deployments need explicit decisions about key storage, key rotation, custody, and access control. AgentReceipt does not authenticate callers by itself. Host systems authenticate callers, sessions, services, or agents, then pass caller metadata into AgentReceipt. AgentReceipt records that host-supplied metadata and signs it into the receipt.
+Real deployments need explicit decisions about key storage, key rotation, custody, and access control. BoundaryAttest does not authenticate callers by itself. Host systems authenticate callers, sessions, services, or agents, then pass caller metadata into BoundaryAttest. BoundaryAttest records that host-supplied metadata and signs it into the receipt.
 
-A receipt proves that the holder of the signing key produced the receipt over the included fields. It does not prove the business correctness of the action.
+A valid signature indicates that the corresponding signing key produced the receipt over the included fields. It does not establish the business correctness of the action.
 
 For a future optional model that cryptographically binds caller request intent to server-attested outcomes, see `docs/caller-signed-requests.md`.
 
@@ -98,15 +100,17 @@ Diagnostic and read-only calls can still be signed if the host system needs that
 
 ## Interop and schema direction
 
-AgentReceipt is currently a TypeScript implementation and local-first proof of concept. The long-term value may be a stable receipt envelope and signing input that other systems can emit, store, or verify.
+BoundaryAttest is currently a TypeScript implementation and local-first proof of concept. The long-term value may be a stable receipt envelope and signing input that other systems can emit, store, or verify.
+
+BoundaryAttest was previously called AgentReceipt during early PoC work. The `agentreceipt` package, CLI command, storage directory, and exported API names remain unchanged in this first-pass branding rename for compatibility.
 
 This is not a standard yet.
 
 ## Intergrax PoC
 
-Intergrax is an external open-source agent runtime maintained independently from AgentReceipt. Through technical collaboration with the Intergrax maintainer, AgentReceipt completed a proof of concept against unsigned tool and harness boundary events exposed by Intergrax. The adapter creates one signed `client_observed` receipt per event, preserves stable event identity, ordering, boundary type, run/step grouping, and lineage, and independently verifies each receipt and comparable canonical hash.
+Intergrax is an external open-source agent runtime maintained independently from BoundaryAttest. A live PoC with Intergrax exercises unsigned tool and harness boundary events exposed by Intergrax. The adapter creates a separate signed `client_observed` receipt for each `tool_execution` and `harness_step` boundary event, preserves stable event identity, ordering, run/step grouping, and lineage, and independently verifies each receipt and comparable canonical hash.
 
-This demonstrated that AgentReceipt can map real external runtime evidence into its receipt format. It was a technical proof of concept, not a production deployment, paying customer relationship, formal commercial partnership, or endorsement. It was also not `server_attested`, because Intergrax did not sign the event. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
+This demonstrates that BoundaryAttest can map external runtime evidence into its receipt format. It is a technical proof of concept, not a production deployment, paying customer relationship, formal commercial partnership, or endorsement. It is not `server_attested`, because Intergrax does not sign the event. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
 
 ## Current Status
 
@@ -120,13 +124,13 @@ This demonstrated that AgentReceipt can map real external runtime evidence into 
 
 ## Current Limitations
 
-AgentReceipt is experimental and local-first. The current local signing setup is intended for development and proof-of-concept use; production deployments need an explicit key-custody model. Possible future integrations could include operating-system secure storage, managed key services, or hardware-backed keys, but no provider or implementation is committed.
+BoundaryAttest is experimental and local-first. The current local signing setup is intended for development and proof-of-concept use; production deployments need an explicit key-custody model. Possible future integrations could include operating-system secure storage, managed key services, or hardware-backed keys, but no provider or implementation is committed.
 
-A valid signature proves that a particular key signed a particular receipt. It does not automatically prove that the claim is true, that the action was authorized, that the human identity is correct, that the signer's environment was uncompromised, or that the receipt provides legal non-repudiation.
+A valid signature indicates that a particular key signed a particular receipt. It does not establish that the claim is true, that the action was authorized, that the human identity is correct, or that the signer's environment was uncompromised.
 
 The current linear `previous_receipt_hash` chain is easiest to use with coordinated sequential writers. Highly concurrent or distributed environments may later need separate chains, coordination, checkpoints, or DAG-style lineage; those are future design possibilities, not promised roadmap items.
 
-Retention and pruning affect what can be verified later. Removing earlier receipts limits what can be proven about omitted history. A retained chain can prove consistency from its retained starting point, but it cannot prove that no earlier or omitted receipts existed.
+Retention and pruning affect what can be verified later. Removing earlier receipts limits what can be checked about omitted history. A retained chain can show consistency from its retained starting point, but it cannot establish that no earlier or omitted receipts existed.
 
 Hash-based evidence helps verify that later-provided input, output, or error evidence matches what was originally receipted. Hashes do not reveal or recover the original input or output. Verification requires access to the original evidence and the same canonicalization rules.
 
@@ -187,13 +191,13 @@ Trust-boundary demo:
 npm run example:trust-boundary
 ```
 
-Intergrax PoC proof:
+Intergrax PoC run:
 
 ```sh
 npm run example:intergrax-poc
 ```
 
-See `docs/integrations/intergrax-poc.md` for the public proof notes, including the `client_observed` trust role, hash matching, lineage, and why this is not server attestation.
+See `docs/integrations/intergrax-poc.md` for the public PoC notes, including the `client_observed` trust role, hash matching, lineage, and why this is not server attestation.
 
 MCP-shaped educational demo:
 
@@ -237,7 +241,7 @@ Because `reset:all` deletes the local key material, old local receipts may becom
 
 Failed receipts keep the same core shape, set `action_status` to `failed`, set `output_hash` to `null`, and add `error_hash`.
 
-## Using AgentReceipt In Your Code
+## Using BoundaryAttest In Your Code
 
 Use `withAgentReceipt` to wrap any async local tool call. It creates keys if needed, hashes the input, runs your function, signs the receipt, chains it to the previous local receipt, and writes the receipt JSON to `./receipts/`.
 
@@ -266,13 +270,13 @@ Failed receipts record `action_status: "failed"`, `input_hash`, `output_hash: nu
 
 ## Selective Receipt Capture
 
-AgentReceipt is not meant to record every low-value tool call. By default, `withAgentReceipt` treats missing policy as:
+BoundaryAttest is not meant to record every low-value tool call. By default, `withAgentReceipt` treats missing policy as:
 
 ```ts
 { mode: "required", reason: "default" }
 ```
 
-Use `receiptPolicy.mode: "required"` for actions where proof matters.
+Use `receiptPolicy.mode: "required"` for consequential actions where a signed attestation matters.
 
 ```ts
 await withAgentReceipt({
@@ -284,7 +288,7 @@ await withAgentReceipt({
 });
 ```
 
-Use `receiptPolicy.mode: "off"` for noisy or low-value calls. In this mode AgentReceipt runs the tool, creates no receipt file, and returns `receipt: null` and `receiptPath: null`. If the tool fails, it rethrows the original error without creating a failed receipt.
+Use `receiptPolicy.mode: "off"` for noisy or low-value calls. In this mode BoundaryAttest runs the tool, creates no receipt file, and returns `receipt: null` and `receiptPath: null`. If the tool fails, it rethrows the original error without creating a failed receipt.
 
 ```ts
 await withAgentReceipt({
@@ -300,7 +304,7 @@ Selective capture reduces I/O and storage bloat. Retention pruning can also dele
 
 ## Pluggable receipt sinks
 
-AgentReceipt is not meant to force a new logging stack. Local JSON receipts are the default, but developers can provide a custom receipt sink to route signed receipts to their own storage, audit, or observability system.
+BoundaryAttest is not meant to force a new logging stack. Local JSON receipts are the default, but developers can provide a custom receipt sink to route signed receipts to their own storage, audit, or observability system.
 
 Built-in sinks:
 
@@ -332,15 +336,15 @@ const wrapped = await withAgentReceipt({
 });
 ```
 
-If `receiptSink` is omitted, AgentReceipt uses `LocalFileReceiptSink` and preserves the existing local file behavior. If `receiptPolicy.mode` is `"off"`, AgentReceipt does not create a receipt and does not call the sink.
+If `receiptSink` is omitted, BoundaryAttest uses `LocalFileReceiptSink` and preserves the existing local file behavior. If `receiptPolicy.mode` is `"off"`, BoundaryAttest does not create a receipt and does not call the sink.
 
 Local chain verification applies only to receipts written by `LocalFileReceiptSink`. `LocalFileReceiptSink` serializes in-process receipt signing and writes to reduce chain races during concurrent tool calls. This is not distributed locking; multi-process or distributed receipt chains need stronger coordination.
 
-Custom sinks are useful for integration, but external durability and verification are the developer's responsibility for now. AgentReceipt does not yet support cross-sink or global chain verification.
+Custom sinks are useful for integration, but external durability and verification are the developer's responsibility for now. BoundaryAttest does not yet support cross-sink or global chain verification.
 
 ## Retention and pruning
 
-AgentReceipt writes local JSON receipt files to `./receipts/`. Use `npm run prune` to prevent receipt folders from growing forever.
+BoundaryAttest writes local JSON receipt files to `./receipts/`. Use `npm run prune` to prevent receipt folders from growing forever.
 
 By default, pruning keeps receipts from the last 30 days and keeps at most 1000 receipts. You can override those values with `.agentreceipt/config.json`:
 
@@ -359,7 +363,7 @@ After pruning, full historical chain verification with `npm run chain` may fail.
 
 ## MCP-Shaped Usage
 
-AgentReceipt includes a minimal MCP-shaped educational adapter demo. It demonstrates the boundary AgentReceipt cares about: a tool-call shaped request.
+BoundaryAttest includes a minimal MCP-shaped educational adapter demo. It demonstrates the trust boundary the project cares about: a tool-call shaped request.
 
 ```ts
 import { withMcpReceipt } from "agentreceipt";
@@ -385,13 +389,13 @@ const { mcpResult, receipt, receiptPath } = await withMcpReceipt({
 });
 ```
 
-`withMcpReceipt` validates that `method` is exactly `tools/call`, uses `params.name` as the AgentReceipt tool name, and uses `params.arguments` as the recorded input. It is an educational adapter for MCP-shaped requests; the real local MCP SDK demos show the current client-side and server-side wrapper patterns.
+`withMcpReceipt` validates that `method` is exactly `tools/call`, uses `params.name` as the BoundaryAttest tool name, and uses `params.arguments` as the recorded input. It is an educational adapter for MCP-shaped requests; the real local MCP SDK demos show the current client-side and server-side wrapper patterns.
 
-AgentReceipt currently records executed and failed tool calls. It does not approve, deny, block, or enforce actions.
+BoundaryAttest currently records executed and failed tool calls. It does not approve, deny, block, or enforce actions.
 
 ## Real Local MCP Proof-Of-Concept
 
-`npm run demo:clean` and `npm run example:mcp-real` use the official MCP TypeScript SDK with an in-memory local transport. The demo creates a tiny local MCP server, registers only safe demo tools, calls them through a real MCP client, and wraps the actual MCP `client.callTool(...)` results with AgentReceipt.
+`npm run demo:clean` and `npm run example:mcp-real` use the official MCP TypeScript SDK with an in-memory local transport. The demo creates a tiny local MCP server, registers only safe demo tools, calls them through a real MCP client, and wraps the actual MCP `client.callTool(...)` results with BoundaryAttest.
 
 The demo tools are:
 
@@ -402,11 +406,11 @@ This proof-of-concept does not connect to external tools, user data, files, cred
 
 ## Client-Observed vs Server-Attested Receipts
 
-AgentReceipt receipts can include `receipt_role`.
+BoundaryAttest receipts can include `receipt_role`.
 
-`client_observed` receipts wrap `client.callTool(...)` or another client-side tool-call boundary. They prove what the client observed sending and receiving.
+`client_observed` receipts wrap `client.callTool(...)` or another client-side tool-call boundary. They are signed claims about what the client observed sending and receiving.
 
-`server_attested` receipts wrap the server-side tool handler. They prove what the server attests happened, assuming the server key and runtime are trusted. This is closer to the source of truth for tool execution and is stronger for third-party proof.
+`server_attested` receipts wrap the server-side tool handler. They record what the server attests happened, assuming the server key and runtime are trusted. This is closer to the source of truth for tool execution and provides stronger evidence for third-party review.
 
 `npm run example:mcp-server` is a local experimental demo using the official MCP TypeScript SDK, in-memory transport, and the safe demo tools `echo.message` and `math.add`. It is not a formal standard or production trust model. See `docs/client-vs-server-receipts.md` for the short version.
 
@@ -429,17 +433,17 @@ const handler = withServerReceipt({
 });
 ```
 
-When `caller` is provided, AgentReceipt records `caller_id`, `caller_type`, and `caller_auth_ref` in the signed receipt. If `caller.type` is missing, AgentReceipt records `caller_type: "unknown"`. If `caller` is omitted, caller fields are omitted for backward compatibility.
+When `caller` is provided, BoundaryAttest records `caller_id`, `caller_type`, and `caller_auth_ref` in the signed receipt. If `caller.type` is missing, BoundaryAttest records `caller_type: "unknown"`. If `caller` is omitted, caller fields are omitted for backward compatibility.
 
-AgentReceipt does not authenticate callers. Host systems authenticate callers, sessions, services, or agents, then pass that metadata into AgentReceipt. AgentReceipt records that host-supplied metadata into the signed receipt so the receipt can say who invoked the tool at a trust boundary.
+BoundaryAttest does not authenticate callers. Host systems authenticate callers, sessions, services, or agents, then pass that metadata into BoundaryAttest. BoundaryAttest records that host-supplied metadata into the signed receipt so the receipt can say who invoked the tool at a trust boundary.
 
 This is useful when a later reviewer needs evidence shaped like: server `S` attests caller `X` invoked tool `Y` with args `Z`.
 
 ## Linking receipts to upstream records
 
-AgentReceipt can link an execution receipt back to an upstream proposal, ticket, approval, workflow run, or execution record.
+BoundaryAttest can link an execution receipt back to an upstream proposal, ticket, approval, workflow run, or execution record.
 
-AgentReceipt does not manage that upstream system. Host systems supply the lineage reference, type, optional hash, and optional label:
+BoundaryAttest does not manage that upstream system. Host systems supply the lineage reference, type, optional hash, and optional label:
 
 ```ts
 await withServerReceipt({
@@ -456,7 +460,7 @@ await withServerReceipt({
 });
 ```
 
-When present, AgentReceipt records `lineage_ref`, `lineage_type`, `lineage_hash`, and `lineage_label` in the signed receipt. If `lineage.type` is missing, AgentReceipt records `lineage_type: "other"`. If lineage is omitted, these fields are omitted for backward compatibility.
+When present, BoundaryAttest records `lineage_ref`, `lineage_type`, `lineage_hash`, and `lineage_label` in the signed receipt. If `lineage.type` is missing, BoundaryAttest records `lineage_type: "other"`. If lineage is omitted, these fields are omitted for backward compatibility.
 
 This helps show continuity: upstream intent/approval record -> server-attested execution receipt -> outcome/review. See `docs/receipt-lineage.md` for the short version.
 
@@ -476,21 +480,21 @@ The demo shows side-effecting business-style actions using fake local data only:
 
 It demonstrates the shape: server attests caller `X` invoked tool `Y` with args `Z`, linked to optional upstream record `P`, and returned result `R`.
 
-AgentReceipt is not replacing logs or OpenTelemetry. Normal logs and telemetry are usually the right tools for ordinary debugging and internal monitoring. AgentReceipt is for cases where a portable, verifiable action record matters across a trust boundary.
+BoundaryAttest is not replacing logs or OpenTelemetry. Normal logs and telemetry are usually the right tools for ordinary debugging and internal monitoring. BoundaryAttest is for consequential actions where a portable signed attestation matters across a trust boundary.
 
 ## Does This Work With Any MCP Server?
 
-Not automatically yet. AgentReceipt currently works where a developer can wrap or intercept the tool-call boundary. The real MCP proof-of-concept shows AgentReceipt can wrap actual MCP SDK `client.callTool(...)` calls. Production/external MCP server support would require adapter testing for transports, client setups, and production edge cases.
+Not automatically yet. BoundaryAttest currently works where a developer can wrap or intercept the tool-call boundary. The real MCP proof-of-concept shows BoundaryAttest can wrap actual MCP SDK `client.callTool(...)` calls. Production/external MCP server support would require adapter testing for transports, client setups, and production edge cases.
 
 ## What It Does Not Prove
 
-`client_observed` receipts prove what the client observed sending and receiving.
+`client_observed` receipts are signed claims about what the client observed sending and receiving.
 
-`server_attested` receipts prove what the server attests happened, assuming the server key and runtime are trusted.
+`server_attested` receipts record what the server attests happened, assuming the server key and runtime are trusted.
 
-AgentReceipt still does not prove that an agent made a correct decision, that an action was authorized, that the surrounding system was secure, or that any workflow is compliant. Hashes prove the same input, output, or error fingerprint can be matched later, not that the action was correct.
+BoundaryAttest does not establish that an agent made a correct decision, that an action was authorized, that the surrounding system was secure, or that any workflow is compliant. Hashes let the same input, output, or error fingerprint be matched later; they do not establish that the action was correct.
 
-AgentReceipt does not verify upstream proposal, ticket, approval, workflow, or execution records by itself. `lineage_ref` and `lineage_hash` are host-supplied metadata.
+BoundaryAttest does not verify upstream proposal, ticket, approval, workflow, or execution records by itself. `lineage_ref` and `lineage_hash` are host-supplied metadata.
 
 It is not compliance software, not a compliance-grade audit system, and not a substitute for secure logging, access control, independent timestamping, or production key management.
 

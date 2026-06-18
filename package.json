@@ -1,7 +1,8 @@
 {
   "name": "agentreceipt",
   "version": "0.1.0",
-  "description": "Local-first tamper-evident receipts for AI agent tool calls.",
+  "description": "Portable signed attestations for consequential agent actions crossing trust boundaries.",
+  "homepage": "https://boundaryattest.com",
   "type": "module",
   "private": true,
   "license": "MIT",

@@ -170,7 +170,7 @@ test("rejects unsupported boundary event schema", () => {
   );
 });
 
-test("compares AgentReceipt canonical hashes with Intergrax hashes", () => {
+test("compares BoundaryAttest canonical hashes with Intergrax hashes", () => {
   const value = { b: 2, a: 1 };
   const digest = hashValue(value);
 

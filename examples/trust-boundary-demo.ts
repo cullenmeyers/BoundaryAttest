@@ -216,7 +216,7 @@ async function main(): Promise<void> {
 
   try {
     console.log("Normal logs can show what happened inside one system.");
-    console.log("AgentReceipt creates a signed, portable receipt for actions that may need to be verified later.");
+    console.log("BoundaryAttest creates portable signed attestations for consequential agent actions crossing trust boundaries.");
 
     const calls: ToolCall[] = [
       {
