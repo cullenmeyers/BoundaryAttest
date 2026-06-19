@@ -6,6 +6,16 @@ BoundaryAttest receipts are tamper-evident local records, not a security guarant
 
 It is not compliance software and should not be used as a legal, regulatory, or compliance-grade audit system.
 
+A valid signature shows that the corresponding key signed the included claim. It does not prove:
+
+- that the claim is true
+- that the action was authorized
+- the identity of a human
+- that the signing or executing runtime was uncompromised
+- that the event stream is complete
+- the final business outcome
+- who bears legal responsibility
+
 It does not prove that an agent made a correct decision. It also does not prove that an external tool actually performed the claimed action.
 
 Receipt hashes let the same input/output be matched later; they do not establish that the action was correct or useful.

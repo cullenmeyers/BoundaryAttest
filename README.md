@@ -23,7 +23,7 @@ npm run build
 npm run example:trust-boundary
 ```
 
-The trust-boundary demo uses the official MCP TypeScript SDK with local in-memory transport and fake local data. It shows side-effecting business-style actions where a server attests that caller `X` invoked tool `Y` with args `Z` and returned result `R`.
+The trust-boundary demo uses the official MCP TypeScript SDK with local in-memory transport and fake local data. It shows side-effecting business-style actions where a host signs a claim that caller `X` invoked tool `Y` with args `Z` and returned result `R`.
 
 The `echo.message` and `math.add` demos exercise the plumbing. The trust-boundary demo shows the intended use case.
 
@@ -58,15 +58,13 @@ These tools run only inside the local MCP SDK demo. They do not touch real files
 - Not a permission engine.
 - Not a hosted dashboard.
 
-## Why This Matters
-
-As AI agents call more tools across boundaries, developers need a lightweight way to preserve signed claims about consequential actions without storing private raw inputs or outputs. BoundaryAttest records hashes, signatures, timestamps, caller metadata when supplied, and chain links so receipts can be checked later.
-
-## Portable execution evidence
+## When This Matters
 
 BoundaryAttest is not a replacement for logs, tracing, Git history, cloud audit trails, provider audit logs, or approval systems. Those systems are still the right source of truth for ordinary debugging, platform operations, access history, and workflow enforcement.
 
-BoundaryAttest creates portable signed attestations for consequential agent actions crossing trust boundaries.
+Inside one organization or trust domain, ordinary logs may already be enough. BoundaryAttest matters when a signed claim about a consequential agent action needs to travel outside the original runtime, vendor, app, or logging system. It creates a portable attestation that another party can check later without relying only on the original system's logs.
+
+The value of that attestation depends on who signs it, who holds the signing keys, what claim is signed, who the claim is meant to protect, and what the signature does and does not establish.
 
 Strong use cases include:
 
@@ -84,7 +82,11 @@ Weak use cases include:
 
 ## Key custody and trust model
 
-`server_attested` receipts are only as trustworthy as the server key and runtime. The local demo key in `.agentreceipt` is not production key management.
+`client_observed` means BoundaryAttest signs what its client observed sending and receiving. It does not turn that observation into a claim from the executing host.
+
+`server_attested`, or host-side signing, means the executing host or runtime signs what it claims it executed. BoundaryAttest includes only local experimental demos of this mode; production host-side integration and production key custody are not implemented.
+
+Both modes are only as trustworthy as the signer, its key custody, and its runtime. The local demo key in `.agentreceipt` is not production key management.
 
 Real deployments need explicit decisions about key storage, key rotation, custody, and access control. BoundaryAttest does not authenticate callers by itself. Host systems authenticate callers, sessions, services, or agents, then pass caller metadata into BoundaryAttest. BoundaryAttest records that host-supplied metadata and signs it into the receipt.
 
@@ -108,9 +110,9 @@ This is not a standard yet.
 
 ## Intergrax PoC
 
-Intergrax is an external open-source agent runtime maintained independently from BoundaryAttest. A live PoC with Intergrax exercises unsigned tool and harness boundary events exposed by Intergrax. The adapter creates a separate signed `client_observed` receipt for each `tool_execution` and `harness_step` boundary event, preserves stable event identity, ordering, run/step grouping, and lineage, and independently verifies each receipt and comparable canonical hash.
+Intergrax is an external open-source agent runtime maintained independently from BoundaryAttest. Live PoC v2 validates client-observed mapping of unsigned tool and harness events from `boundary_events[]`. The adapter creates one signed `client_observed` receipt per `tool_execution` or `harness_step` event; it does not create a composite run receipt. Per-event identity and correlation come from `boundary_events[]`, while the Intergrax trace endpoint is run/task-level rather than per-event.
 
-This demonstrates that BoundaryAttest can map external runtime evidence into its receipt format. It is a technical proof of concept, not a production deployment, paying customer relationship, formal commercial partnership, or endorsement. It is not `server_attested`, because Intergrax does not sign the event. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
+This demonstrates that BoundaryAttest can map client-observed external runtime evidence into its receipt format. It is a technical proof of concept, not a production integration, deployment, paying customer relationship, formal commercial partnership, or endorsement. Intergrax does not sign the event, so host-side signing is a possible next step rather than part of the completed v2 PoC. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
 
 ## Current Status
 
@@ -410,7 +412,7 @@ BoundaryAttest receipts can include `receipt_role`.
 
 `client_observed` receipts wrap `client.callTool(...)` or another client-side tool-call boundary. They are signed claims about what the client observed sending and receiving.
 
-`server_attested` receipts wrap the server-side tool handler. They record what the server attests happened, assuming the server key and runtime are trusted. This is closer to the source of truth for tool execution and provides stronger evidence for third-party review.
+`server_attested` receipts wrap the server-side tool handler. They are signed host/runtime claims about what the host says it executed, assuming the host key and runtime are trusted. BoundaryAttest demonstrates this only in local experimental examples; it does not provide a production host-side signing integration.
 
 `npm run example:mcp-server` is a local experimental demo using the official MCP TypeScript SDK, in-memory transport, and the safe demo tools `echo.message` and `math.add`. It is not a formal standard or production trust model. See `docs/client-vs-server-receipts.md` for the short version.
 
@@ -462,7 +464,7 @@ await withServerReceipt({
 
 When present, BoundaryAttest records `lineage_ref`, `lineage_type`, `lineage_hash`, and `lineage_label` in the signed receipt. If `lineage.type` is missing, BoundaryAttest records `lineage_type: "other"`. If lineage is omitted, these fields are omitted for backward compatibility.
 
-This helps show continuity: upstream intent/approval record -> server-attested execution receipt -> outcome/review. See `docs/receipt-lineage.md` for the short version.
+This helps show continuity: upstream intent/approval record -> signed host/runtime claim -> outcome/review. See `docs/receipt-lineage.md` for the short version.
 
 ## Trust-boundary demo
 
@@ -478,7 +480,7 @@ The demo shows side-effecting business-style actions using fake local data only:
 - `documents.publish_record`
 - `commerce.create_order_hold`
 
-It demonstrates the shape: server attests caller `X` invoked tool `Y` with args `Z`, linked to optional upstream record `P`, and returned result `R`.
+It demonstrates the shape: a host signs a claim that caller `X` invoked tool `Y` with args `Z`, linked to optional upstream record `P`, and returned result `R`.
 
 BoundaryAttest is not replacing logs or OpenTelemetry. Normal logs and telemetry are usually the right tools for ordinary debugging and internal monitoring. BoundaryAttest is for consequential actions where a portable signed attestation matters across a trust boundary.
 
@@ -490,7 +492,7 @@ Not automatically yet. BoundaryAttest currently works where a developer can wrap
 
 `client_observed` receipts are signed claims about what the client observed sending and receiving.
 
-`server_attested` receipts record what the server attests happened, assuming the server key and runtime are trusted.
+`server_attested` receipts are signed claims from the host/runtime about what it says it executed, assuming the host key and runtime are trusted.
 
 BoundaryAttest does not establish that an agent made a correct decision, that an action was authorized, that the surrounding system was secure, or that any workflow is compliant. Hashes let the same input, output, or error fingerprint be matched later; they do not establish that the action was correct.
 

@@ -1,10 +1,10 @@
 # Intergrax PoC Integration
 
-This document records the live BoundaryAttest proof of concept with Intergrax for the `attestation_demo` handoff. BoundaryAttest was previously called AgentReceipt during early PoC work.
+This document records the live BoundaryAttest PoC v2 with Intergrax for the `attestation_demo` handoff. It validates client-observed mapping; it is not a production integration. BoundaryAttest was previously called AgentReceipt during early PoC work.
 
 ## Integration Flow
 
-The example adapter in `examples/intergrax-poc` posts the sanitized request fixture to an Intergrax `attestation_demo` runtime, reads and orders `boundary_events[]` from the response, accepts only `execution_boundary_event.v1`, and maps each event into its own BoundaryAttest receipt. For every boundary event it writes both:
+The example adapter in `examples/intergrax-poc` posts the sanitized request fixture to an Intergrax `attestation_demo` runtime, reads and orders `boundary_events[]` from the response, accepts only `execution_boundary_event.v1`, and maps each event into its own BoundaryAttest receipt. It creates one receipt per boundary event and no composite run receipt. For every boundary event it writes both:
 
 - a local signed receipt under `receipts/`
 - an Intergrax evidence sidecar next to the receipt
@@ -13,7 +13,7 @@ Generated receipts, sidecars, traces, local signing keys, and temporary test fol
 
 ## Live Result
 
-PoC v2 defines two claims for a successful run: a `records.put` `tool_execution` event followed by a `harness_step` event. The local BoundaryAttest adapter writes and independently verifies separate `client_observed` receipts for those two boundary events:
+PoC v2 defines two claims for a successful run: a `records.put` `tool_execution` event followed by a `harness_step` event. The local BoundaryAttest adapter writes and independently verifies separate `client_observed` receipts for those two boundary events. BoundaryAttest signs what its client observed:
 
 ```text
 verification: valid
@@ -46,7 +46,7 @@ lineage_type: execution_record
 
 The failed-tool fixture also remains two claims: a `failed` tool receipt and a valid completed-harness receipt. Harness `completed` maps to BoundaryAttest's existing `success` status, with the original `completed` value preserved in metadata. A null harness `tool_id` maps to `intergrax.harness_step`; no core schema change is needed.
 
-The shared `run_id` and `step_id`, plus each event's `lineage.ref`, correlate receipts and evidence sidecars with the Intergrax journal for the run. The journal remains the Intergrax-side operational record; each BoundaryAttest receipt is a portable attestation that the adapter observed and signed for one boundary event.
+The shared `run_id` and `step_id`, plus each event's `lineage.ref`, correlate receipts and evidence sidecars with the Intergrax journal for the run. This per-event data comes from `boundary_events[]`. The Intergrax trace endpoint is run/task-level, not per-event, and is not the source of per-event correlation. The journal remains the Intergrax-side operational record; each BoundaryAttest receipt is a portable attestation that the adapter observed and signed for one boundary event.
 
 ## What The Receipt Attests
 
@@ -66,4 +66,4 @@ This PoC receipt is `client_observed`, not `server_attested`.
 
 BoundaryAttest signs what the adapter observed after receiving the Intergrax event. Intergrax did not cryptographically sign or attest the event with a server key that BoundaryAttest verifies. Treating this as `server_attested` would overstate the trust model.
 
-Server attestation would require Intergrax, or another trusted server-side runtime, to sign the execution fact with its own key and expose a verification path for that server signature.
+Host-side signing would require Intergrax, or another trusted executing host/runtime, to sign what it claims it executed with its own key and expose a verification path for that signature. This is a possible next step, not part of the completed v2 PoC.
