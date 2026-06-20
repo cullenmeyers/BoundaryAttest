@@ -110,9 +110,9 @@ This is not a standard yet.
 
 ## Intergrax PoC
 
-Intergrax is an external open-source agent runtime maintained independently from BoundaryAttest. Live PoC v2 validates client-observed mapping of unsigned tool and harness events from `boundary_events[]`. The adapter creates one signed `client_observed` receipt per `tool_execution` or `harness_step` event; it does not create a composite run receipt. Per-event identity and correlation come from `boundary_events[]`, while the Intergrax trace endpoint is run/task-level rather than per-event.
+Intergrax is an external open-source agent runtime maintained independently from BoundaryAttest. The PoC supports unsigned v2 tool and harness events and verifies optional EBE-9 host signatures when present in `boundary_events[]`. The adapter creates one separate signed `client_observed` BoundaryAttest receipt per `tool_execution` or `harness_step` event; it does not create a composite run receipt. Per-event identity and correlation come from `boundary_events[]`, while the Intergrax trace endpoint is run/task-level rather than per-event.
 
-This demonstrates that BoundaryAttest can map client-observed external runtime evidence into its receipt format. It is a technical proof of concept, not a production integration, deployment, paying customer relationship, formal commercial partnership, or endorsement. Intergrax does not sign the event, so host-side signing is a possible next step rather than part of the completed v2 PoC. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
+This demonstrates that BoundaryAttest can verify an optional Intergrax host/runtime claim and map the observed event into its own distinct receipt format. It is a technical proof of concept with one pinned demo public key, not production key management, a production integration, deployment, paying customer relationship, formal commercial partnership, or endorsement. A valid host signature does not prove truth, authorization, an uncompromised runtime, legal responsibility, or a final business outcome. See the [Intergrax PoC documentation](docs/integrations/intergrax-poc.md) for technical details.
 
 ## Current Status
 

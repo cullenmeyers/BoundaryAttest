@@ -1,10 +1,12 @@
 # Intergrax PoC Integration
 
-This document records the live BoundaryAttest PoC v2 with Intergrax for the `attestation_demo` handoff. It validates client-observed mapping; it is not a production integration. BoundaryAttest was previously called AgentReceipt during early PoC work.
+This document records the BoundaryAttest PoC integration with Intergrax `attestation_demo`, including EBE-9 host-side event signing. It is a small verifier with one pinned demo public key, not a production integration or key-management system. BoundaryAttest was previously called AgentReceipt during early PoC work.
 
 ## Integration Flow
 
-The example adapter in `examples/intergrax-poc` posts the sanitized request fixture to an Intergrax `attestation_demo` runtime, reads and orders `boundary_events[]` from the response, accepts only `execution_boundary_event.v1`, and maps each event into its own BoundaryAttest receipt. It creates one receipt per boundary event and no composite run receipt. For every boundary event it writes both:
+The example adapter in `examples/intergrax-poc` posts the sanitized request fixture to an Intergrax `attestation_demo` runtime, reads and orders `boundary_events[]` from the response, accepts only `execution_boundary_event.v1`, and maps each event into its own BoundaryAttest receipt. It creates one receipt per boundary event and no composite run receipt. When `signed: true`, the adapter first verifies the EBE-9 host-attestation envelope with the pinned `attestation-demo-host-1` Ed25519 public key. A failed host verification rejects the event before receipt creation. When `signed: false` and `host_attestation: null`, the existing unsigned v2 flow remains supported.
+
+For every accepted boundary event it writes both:
 
 - a local signed receipt under `receipts/`
 - an Intergrax evidence sidecar next to the receipt
@@ -13,10 +15,11 @@ Generated receipts, sidecars, traces, local signing keys, and temporary test fol
 
 ## Live Result
 
-PoC v2 defines two claims for a successful run: a `records.put` `tool_execution` event followed by a `harness_step` event. The local BoundaryAttest adapter writes and independently verifies separate `client_observed` receipts for those two boundary events. BoundaryAttest signs what its client observed:
+PoC v2 defines two claims for a successful run: a `records.put` `tool_execution` event followed by a `harness_step` event. EBE-9 signs each event separately; there is no composite run signature. The local BoundaryAttest adapter verifies each host signature, then writes and independently verifies separate `client_observed` receipts. BoundaryAttest signs what its client observed and ingested:
 
 ```text
 verification: valid
+host_attestation: verified
 receiptRole: client_observed
 boundary_type: tool_execution, harness_step
 event_sequence: 1, 2
@@ -48,22 +51,26 @@ The failed-tool fixture also remains two claims: a `failed` tool receipt and a v
 
 The shared `run_id` and `step_id`, plus each event's `lineage.ref`, correlate receipts and evidence sidecars with the Intergrax journal for the run. This per-event data comes from `boundary_events[]`. The Intergrax trace endpoint is run/task-level, not per-event, and is not the source of per-event correlation. The journal remains the Intergrax-side operational record; each BoundaryAttest receipt is a portable attestation that the adapter observed and signed for one boundary event.
 
-## What The Receipt Attests
+## EBE-9 Verification
 
-The receipt is a signed claim that this local BoundaryAttest adapter received a specific Intergrax boundary event payload and hashed the received input and output. The local verification checks its signature and link into the local receipt chain.
+The generic verifier reconstructs the complete unsigned event by removing `host_attestation` and normalizing `signed` to `false`. It serializes the event as sorted-key, compact UTF-8 JSON, computes the prefixed SHA-256 digest, rebuilds the six-field host-attestation statement, and verifies its Ed25519 signature. It rejects digest mismatches, invalid signatures, unknown key IDs, unsupported algorithms, missing envelopes, and malformed envelopes.
+
+The committed Intergrax golden vector pins the expected event digest and canonical statement bytes. The Intergrax-specific adapter supplies the event extraction and pinned demo key; the core host-attestation verifier does not depend on the Intergrax event schema.
+
+## What The Two Signatures Attest
+
+The Intergrax host signature is a host/runtime claim over one canonical boundary event. The BoundaryAttest receipt signature is a separate local `client_observed` wrapper and ingestion claim over what this adapter received. BoundaryAttest does not relabel its receipt signature as the host signature.
+
+The receipt is a signed claim that this local BoundaryAttest adapter received a specific Intergrax boundary event payload and hashed the received input and output. Local verification checks the BoundaryAttest signature and link into the local receipt chain.
 
 The comparison also checks that the BoundaryAttest canonical input and output hashes match the hashes Intergrax included in the observed event.
 
 ## What It Does Not Prove
 
-The receipt does not prove the business correctness of the action, that the action was authorized, that the surrounding Intergrax runtime was secure, or that the Intergrax journal is complete.
-
-The PoC event is unsigned by Intergrax (`signed: false`). BoundaryAttest records that fact in tool metadata as `intergrax_signed: false`.
+Neither signature proves that the event is true, that the action was authorized, that the host/runtime was uncompromised, or that a claimed business outcome occurred. They also do not prove business correctness or that the Intergrax journal is complete.
 
 ## Why This Is Not Server Attestation
 
-This PoC receipt is `client_observed`, not `server_attested`.
+The BoundaryAttest wrapper remains `client_observed`, not `server_attested`, even after a valid EBE-9 host signature is verified.
 
-BoundaryAttest signs what the adapter observed after receiving the Intergrax event. Intergrax did not cryptographically sign or attest the event with a server key that BoundaryAttest verifies. Treating this as `server_attested` would overstate the trust model.
-
-Host-side signing would require Intergrax, or another trusted executing host/runtime, to sign what it claims it executed with its own key and expose a verification path for that signature. This is a possible next step, not part of the completed v2 PoC.
+BoundaryAttest signs what the adapter observed after receiving the Intergrax event. EBE-9's distinct Intergrax signature is recorded as a verified host/runtime claim when present. Collapsing those trust boundaries or treating either signature as proof of the non-claims above would overstate this PoC.

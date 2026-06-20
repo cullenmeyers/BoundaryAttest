@@ -4,7 +4,7 @@ This is the smallest BoundaryAttest adapter for the live Intergrax `attestation_
 
 ## Start Intergrax
 
-Use the Intergrax PoC v2 runbook at commit `106aee77` (or newer) on branch `agent_experiment_runtime`:
+Use Intergrax commit `96b7f997` on branch `agent_experiment_runtime`:
 
 ```powershell
 git clone https://github.com/jakbuczarnecki/intergrax
@@ -24,14 +24,16 @@ npm run build
 npm run example:intergrax-poc
 ```
 
-The adapter posts `fixtures/poc_run_request.v1.json`, orders all supported `boundary_events[]` by `event_sequence`, and creates one local `client_observed` receipt per event. A successful PoC v2 run produces separate `tool_execution` and `harness_step` receipts. Each receipt is written through `LocalFileReceiptSink`, verified independently, and linked to an evidence sidecar by `event_id`.
+The adapter posts `fixtures/poc_run_request.v1.json`, orders all supported `boundary_events[]` by `event_sequence`, and creates one local `client_observed` receipt per event. A successful run produces separate `tool_execution` and `harness_step` events, each with its own EBE-9 signature and no composite run receipt. Before creating a receipt for `signed: true`, the adapter verifies the canonical event hash and Ed25519 host-attestation statement with the pinned `attestation-demo-host-1` public key. Invalid signed events are rejected. Each accepted event gets a separate BoundaryAttest receipt and evidence sidecar linked by `event_id`.
 
 `event_id`, `event_sequence`, `boundary_type`, `run_id`, `step_id`, policy verdicts, step outcome, and the original Intergrax action status are preserved in metadata/evidence. `lineage.ref` is mapped into receipt lineage. Because BoundaryAttest's existing action status vocabulary does not include `completed`, harness `completed` maps to receipt status `success`; the original value remains `source_action_status: "completed"`. A harness event has no `tool_id`, so it maps to the adapter label `intergrax.harness_step`.
 
 ## What The Receipt Attests
 
-The generated receipt is a signed `client_observed` claim that this local BoundaryAttest adapter received a specific Intergrax boundary event payload and hashed the received input/output with BoundaryAttest canonical hashing. Local verification checks its signature and link into the local receipt chain.
+The Intergrax EBE-9 signature is a host/runtime claim over one boundary event. The generated BoundaryAttest receipt remains a separate signed `client_observed` wrapper and ingestion claim. It says that this adapter received a specific event payload and hashed the received input/output with BoundaryAttest canonical hashing. Local verification checks the BoundaryAttest signature and chain link; it does not substitute that signature for the Intergrax host signature.
 
 ## What It Does Not Prove
 
-Intergrax emits this PoC event unsigned (`signed: false`). The receipt does not prove Intergrax cryptographically attested, signed, authorized, or certified the event. It must not be treated as `server_attested`.
+An EBE-9 host-signed event does not prove truth, authorization, an uncompromised host/runtime, or a final business outcome. The BoundaryAttest wrapper must not be treated as the host signature or as `server_attested`.
+
+When Intergrax host signing is disabled, v2 events with `signed: false` and `host_attestation: null` remain supported. In that mode, metadata explicitly records the event as unsigned and makes no host-attestation claim.

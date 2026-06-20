@@ -6,6 +6,12 @@ export { ConsoleReceiptSink, LocalFileReceiptSink, MemoryReceiptSink } from "./s
 export type { AgentReceipt, ReceiptSink, ReceiptSinkResult } from "./sinks.js";
 export { withMcpReceipt } from "./mcp.js";
 export type { McpToolsCallRequest, WithMcpReceiptOptions, WithMcpReceiptResult } from "./mcp.js";
+export { verifyHostAttestation } from "./hostAttestation.js";
+export type {
+  HostAttestationEnvelope,
+  HostAttestationPublicKeys,
+  HostAttestationVerification,
+} from "./hostAttestation.js";
 export type {
   CallerMetadata,
   CallerType,

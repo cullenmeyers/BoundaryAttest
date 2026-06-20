@@ -1,0 +1,70 @@
+{
+  "schema_id": "ebe9_golden_vector.v1",
+  "description": "Byte-for-byte EBE-9 reference for BoundaryAttest verifier mirror",
+  "public_key_id": "attestation-demo-host-1",
+  "public_key_ed25519": "Gqzzm+wKy7G3VnqP0nDCgodIu28F21Y4jp6kkcH44vc=",
+  "event": {
+    "schema_id": "execution_boundary_event.v1",
+    "event_id": "4d9b7c34-ff54-4451-b6d3-54402c265715",
+    "event_sequence": 1,
+    "boundary_type": "tool_execution",
+    "signed": false,
+    "tool_id": "records.put",
+    "agent_id": "boundary_demo_agent",
+    "run_id": "run_golden_ebe9_vector",
+    "step_id": "store_demo_record",
+    "task_id": "run_golden_ebe9_vector",
+    "tenant_id": "default",
+    "action_status": "executed",
+    "side_effects": true,
+    "risk_level": "medium",
+    "input": {
+      "partition_key": "attestation_demo",
+      "row_key": "golden-001",
+      "data": {
+        "title": "Golden",
+        "version": 1
+      }
+    },
+    "output": {
+      "stored": true,
+      "partition_key": "attestation_demo",
+      "row_key": "golden-001"
+    },
+    "input_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "output_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "error_message": null,
+    "policy_verdicts": [],
+    "step_outcome": null,
+    "occurred_at": "2026-06-19T12:00:00+00:00",
+    "lineage": {
+      "ref": "run_golden_ebe9_vector:store_demo_record",
+      "type": "execution_record"
+    },
+    "runtime_ref": {
+      "platform": "intergrax",
+      "runtime_version": "0.1.0"
+    }
+  },
+  "signed_payload_hash": "sha256:471260726ec163ea7da9803630f90947139415056455453b00d1698345ed6329",
+  "host_attestation_statement": {
+    "context": "boundaryattest.host-attestation.v1",
+    "payload_schema_id": "execution_boundary_event.v1",
+    "signed_payload_hash": "sha256:471260726ec163ea7da9803630f90947139415056455453b00d1698345ed6329",
+    "signature_algorithm": "Ed25519",
+    "public_key_id": "attestation-demo-host-1",
+    "signed_at": "2026-06-19T12:00:00+00:00"
+  },
+  "canonical_statement": "{\"context\":\"boundaryattest.host-attestation.v1\",\"payload_schema_id\":\"execution_boundary_event.v1\",\"public_key_id\":\"attestation-demo-host-1\",\"signature_algorithm\":\"Ed25519\",\"signed_at\":\"2026-06-19T12:00:00+00:00\",\"signed_payload_hash\":\"sha256:471260726ec163ea7da9803630f90947139415056455453b00d1698345ed6329\"}",
+  "host_attestation": {
+    "schema_id": "host_attestation_envelope.v1",
+    "context": "boundaryattest.host-attestation.v1",
+    "payload_schema_id": "execution_boundary_event.v1",
+    "signed_payload_hash": "sha256:471260726ec163ea7da9803630f90947139415056455453b00d1698345ed6329",
+    "signature_algorithm": "Ed25519",
+    "public_key_id": "attestation-demo-host-1",
+    "signed_at": "2026-06-19T12:00:00+00:00",
+    "signature": "idCmoBkXaoW0+3zpMYc6XWmIdCR9iD1kV2/dWXeAlyPrM0kcbTLMzBd9L+gkKG2e0xvaccBnCOSMaoefMbSHCQ=="
+  },
+  "signature_algorithm": "Ed25519"
+}

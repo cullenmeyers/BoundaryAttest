@@ -11,9 +11,19 @@ import {
   executionBoundaryEvents,
   mapIntergraxEventToReceiptOptions,
   persistIntergraxRunReceipts,
+  verifyIntergraxHostAttestation,
+  INTERGRAX_EBE9_PUBLIC_KEY_ID,
+  type IntergraxBoundaryEvent,
   type IntergraxRunResponse,
 } from "../examples/intergrax-poc/adapter.js";
 import { hashValue } from "../src/hash.js";
+import {
+  canonicalHostAttestationJson,
+  computeHostAttestationPayloadHash,
+  hostAttestationStatement,
+  verifyHostAttestation,
+  type HostAttestationEnvelope,
+} from "../src/hostAttestation.js";
 import { createSignedReceipt, writeReceipt } from "../src/receipts.js";
 import { verifyReceipt } from "../src/signing.js";
 
@@ -26,6 +36,22 @@ const failedFixturePath = join(
   "fixtures",
   "poc_run_response.failed.v2.json",
 );
+const ebe9GoldenVectorPath = join(
+  repoRoot,
+  "examples",
+  "intergrax-poc",
+  "fixtures",
+  "ebe9_golden_vector.v1.json",
+);
+
+type Ebe9GoldenVector = {
+  public_key_ed25519: string;
+  event: Record<string, unknown>;
+  signed_payload_hash: string;
+  host_attestation_statement: Record<string, string>;
+  canonical_statement: string;
+  host_attestation: HostAttestationEnvelope;
+};
 let originalCwd = process.cwd();
 let testDir: string | null = null;
 
@@ -35,6 +61,19 @@ function loadFixture(): IntergraxRunResponse {
 
 function loadFailedFixture(): IntergraxRunResponse {
   return JSON.parse(readFileSync(failedFixturePath, "utf8")) as IntergraxRunResponse;
+}
+
+function loadEbe9GoldenVector(): Ebe9GoldenVector {
+  return JSON.parse(readFileSync(ebe9GoldenVectorPath, "utf8")) as Ebe9GoldenVector;
+}
+
+function signedGoldenEvent(): IntergraxBoundaryEvent {
+  const vector = loadEbe9GoldenVector();
+  return {
+    ...vector.event,
+    signed: true,
+    host_attestation: vector.host_attestation,
+  } as IntergraxBoundaryEvent;
 }
 
 function runNodeScript(scriptPath: string, env: NodeJS.ProcessEnv): Promise<{ code: number | null; output: string }> {
@@ -90,6 +129,126 @@ test("maps documented execution boundary event into a valid signed receipt", () 
   assert.equal(receipt.output_hash, hashValue(event.output));
   assert.equal(receipt.tool_metadata_hash?.length, 64);
   assert.equal(verifyReceipt(receipt), true);
+});
+
+test("verifies the EBE-9 golden vector byte for byte", () => {
+  const vector = loadEbe9GoldenVector();
+  const event = signedGoldenEvent();
+
+  assert.equal(computeHostAttestationPayloadHash(event), vector.signed_payload_hash);
+  assert.equal(canonicalHostAttestationJson(hostAttestationStatement(vector.host_attestation)), vector.canonical_statement);
+  assert.deepEqual(hostAttestationStatement(vector.host_attestation), vector.host_attestation_statement);
+
+  const verification = verifyIntergraxHostAttestation(event);
+  assert.equal(verification?.valid, true);
+  assert.equal(verification?.publicKeyId, INTERGRAX_EBE9_PUBLIC_KEY_ID);
+});
+
+test("canonical host-attestation JSON mirrors Python ASCII escaping and Unicode key order", () => {
+  assert.equal(
+    canonicalHostAttestationJson({ "😀": "☃", "é": "café" }),
+    "{\"\\u00e9\":\"caf\\u00e9\",\"\\ud83d\\ude00\":\"\\u2603\"}",
+  );
+});
+
+test("creates a client-observed receipt only after verifying a signed EBE-9 event", () => {
+  const event = signedGoldenEvent();
+  const { receipt, mapping } = createReceiptFromIntergraxEvent(event);
+
+  assert.equal(mapping.hostAttestationVerification?.valid, true);
+  assert.equal(mapping.toolMetadata.intergrax_signed, true);
+  assert.deepEqual(mapping.toolMetadata.intergrax_host_attestation, {
+    verification: "verified",
+    public_key_id: INTERGRAX_EBE9_PUBLIC_KEY_ID,
+    signature_algorithm: "Ed25519",
+    signed_at: "2026-06-19T12:00:00+00:00",
+    signed_payload_hash: loadEbe9GoldenVector().signed_payload_hash,
+  });
+  assert.equal(receipt.receipt_role, "client_observed");
+  assert.equal(verifyReceipt(receipt), true);
+});
+
+test("rejects a tampered EBE-9 event", () => {
+  const event = signedGoldenEvent();
+  event.output = { stored: false };
+
+  assert.throws(() => verifyIntergraxHostAttestation(event), /signed_payload_hash does not match/);
+});
+
+test("rejects an EBE-9 signature verified with the wrong key", () => {
+  const vector = loadEbe9GoldenVector();
+  const wrongPublicKey = Buffer.alloc(32, 7).toString("base64");
+
+  assert.throws(
+    () =>
+      verifyHostAttestation(signedGoldenEvent(), vector.host_attestation, {
+        [INTERGRAX_EBE9_PUBLIC_KEY_ID]: wrongPublicKey,
+      }),
+    /Invalid host-attestation signature/,
+  );
+});
+
+test("rejects an altered EBE-9 signature", () => {
+  const event = signedGoldenEvent();
+  const envelope = event.host_attestation as HostAttestationEnvelope;
+  const alteredSignature = Buffer.from(envelope.signature, "base64");
+  alteredSignature[0] ^= 1;
+  event.host_attestation = { ...envelope, signature: alteredSignature.toString("base64") };
+
+  assert.throws(() => verifyIntergraxHostAttestation(event), /Invalid host-attestation signature/);
+});
+
+test("rejects an unknown EBE-9 public key id", () => {
+  const event = signedGoldenEvent();
+  event.host_attestation = {
+    ...(event.host_attestation as HostAttestationEnvelope),
+    public_key_id: "unknown-host-key",
+  };
+
+  assert.throws(() => verifyIntergraxHostAttestation(event), /Unknown host-attestation public_key_id/);
+});
+
+test("rejects inherited-property key ids as unknown", () => {
+  const event = signedGoldenEvent();
+  event.host_attestation = {
+    ...(event.host_attestation as HostAttestationEnvelope),
+    public_key_id: "constructor",
+  };
+
+  assert.throws(() => verifyIntergraxHostAttestation(event), /Unknown host-attestation public_key_id/);
+});
+
+test("rejects unsupported host-attestation algorithms", () => {
+  const event = signedGoldenEvent();
+  event.host_attestation = {
+    ...(event.host_attestation as HostAttestationEnvelope),
+    signature_algorithm: "RSA-PSS",
+  };
+
+  assert.throws(() => verifyIntergraxHostAttestation(event), /Unsupported host-attestation signature_algorithm/);
+});
+
+test("preserves unsigned v2 compatibility without claiming host verification", () => {
+  const response = loadFixture();
+  const event = response.boundary_events?.[0];
+  assert.ok(event);
+
+  const mapping = mapIntergraxEventToReceiptOptions(event, response);
+  assert.equal(mapping.hostAttestationVerification, null);
+  assert.deepEqual(mapping.toolMetadata.intergrax_host_attestation, { verification: "unsigned" });
+  assert.doesNotThrow(() => createReceiptFromIntergraxEvent(event, response));
+});
+
+test("rejects signed events with missing or malformed host-attestation envelopes", () => {
+  const event = signedGoldenEvent();
+  assert.throws(
+    () => verifyIntergraxHostAttestation({ ...event, host_attestation: null }),
+    /missing required host_attestation/,
+  );
+  assert.throws(
+    () => verifyIntergraxHostAttestation({ ...event, host_attestation: { signature: "bad" } }),
+    /Malformed host-attestation envelope/,
+  );
 });
 
 test("creates and independently verifies one receipt per successful v2 boundary event", () => {

@@ -1,6 +1,10 @@
 import { writeFileSync } from "node:fs";
 import { hashValue } from "../../src/hash.js";
 import {
+  verifyHostAttestation,
+  type HostAttestationVerification,
+} from "../../src/hostAttestation.js";
+import {
   createSignedReceipt,
   type ActionStatus,
   type CreateReceiptOptions,
@@ -12,6 +16,12 @@ import { LocalFileReceiptSink, type ReceiptSinkResult } from "../../src/sinks.js
 import { verifyReceipt } from "../../src/signing.js";
 
 export const EXECUTION_BOUNDARY_SCHEMA_ID = "execution_boundary_event.v1";
+export const INTERGRAX_EBE9_PUBLIC_KEY_ID = "attestation-demo-host-1";
+export const INTERGRAX_EBE9_PUBLIC_KEY_BASE64 = "Gqzzm+wKy7G3VnqP0nDCgodIu28F21Y4jp6kkcH44vc=";
+
+const INTERGRAX_HOST_ATTESTATION_KEYS = {
+  [INTERGRAX_EBE9_PUBLIC_KEY_ID]: INTERGRAX_EBE9_PUBLIC_KEY_BASE64,
+} as const;
 
 type JsonObject = Record<string, unknown>;
 
@@ -28,6 +38,7 @@ export type IntergraxBoundaryEvent = {
   event_sequence?: number;
   boundary_type?: string;
   signed?: boolean;
+  host_attestation?: unknown;
   tool_id?: string;
   agent_id?: string;
   run_id?: string;
@@ -71,6 +82,7 @@ export type IntergraxReceiptMapping = {
   receiptOptions: Omit<CreateReceiptOptions, "previousReceiptHash">;
   toolMetadata: JsonObject;
   hashComparisons: HashComparison[];
+  hostAttestationVerification: HostAttestationVerification | null;
 };
 
 export type PersistedIntergraxReceipt = {
@@ -80,6 +92,7 @@ export type PersistedIntergraxReceipt = {
   verificationValid: boolean;
   evidencePath: string | null;
   hashComparisons: HashComparison[];
+  hostAttestationVerification: HostAttestationVerification | null;
 };
 
 const HEX_SHA256 = /^[a-f0-9]{64}$/i;
@@ -195,6 +208,23 @@ function comparableDigest(intergraxHash: string | null | undefined): { digest: s
   };
 }
 
+export function verifyIntergraxHostAttestation(
+  event: IntergraxBoundaryEvent,
+): HostAttestationVerification | null {
+  if (event.signed !== true) {
+    if (event.host_attestation !== undefined && event.host_attestation !== null) {
+      throw new Error("Unsigned Intergrax event must not include a host_attestation envelope");
+    }
+    return null;
+  }
+
+  if (event.host_attestation === undefined || event.host_attestation === null) {
+    throw new Error("Signed Intergrax event is missing required host_attestation envelope");
+  }
+
+  return verifyHostAttestation(event as JsonObject, event.host_attestation, INTERGRAX_HOST_ATTESTATION_KEYS);
+}
+
 export function compareIntergraxHash(
   field: "input" | "output",
   value: unknown,
@@ -233,6 +263,7 @@ export function mapIntergraxEventToReceiptOptions(
   const eventId = requireString(event.event_id, "event_id");
   const eventSequence = requireEventSequence(event.event_sequence);
   const boundaryType = requireString(event.boundary_type, "boundary_type");
+  const hostAttestationVerification = verifyIntergraxHostAttestation(event);
   const toolMetadata: JsonObject = {
     source: "intergrax",
     source_schema_id: event.schema_id,
@@ -242,6 +273,15 @@ export function mapIntergraxEventToReceiptOptions(
     boundary_type: boundaryType,
     source_action_status: event.action_status ?? null,
     intergrax_signed: event.signed === true,
+    intergrax_host_attestation: hostAttestationVerification
+      ? {
+          verification: "verified",
+          public_key_id: hostAttestationVerification.publicKeyId,
+          signature_algorithm: hostAttestationVerification.signatureAlgorithm,
+          signed_at: hostAttestationVerification.signedAt,
+          signed_payload_hash: hostAttestationVerification.signedPayloadHash,
+        }
+      : { verification: "unsigned" },
     run_id: event.run_id ?? null,
     step_id: event.step_id ?? null,
     task_id: event.task_id ?? null,
@@ -256,8 +296,9 @@ export function mapIntergraxEventToReceiptOptions(
     runtime_ref: event.runtime_ref ?? null,
     trust_model: response.trust_model ?? null,
     response_metadata: response.metadata ?? null,
-    receipt_trust_note:
-      "AgentReceipt locally signs the event received by this adapter; Intergrax did not cryptographically sign or attest this event.",
+    receipt_trust_note: hostAttestationVerification
+      ? "Intergrax host signature was verified as a separate host/runtime claim; BoundaryAttest locally signs only its client-observed ingestion wrapper."
+      : "BoundaryAttest locally signs the unsigned event received by this adapter; no Intergrax host signature was present.",
   };
 
   return {
@@ -282,6 +323,7 @@ export function mapIntergraxEventToReceiptOptions(
       compareIntergraxHash("input", event.input, event.input_hash),
       compareIntergraxHash("output", event.output, event.output_hash),
     ],
+    hostAttestationVerification,
   };
 }
 
@@ -341,6 +383,7 @@ export async function persistIntergraxEventReceipt(
     evidencePath,
     verificationValid: verifyReceipt(receipt),
     hashComparisons: mapping.hashComparisons,
+    hostAttestationVerification: mapping.hostAttestationVerification,
   };
 }
 

@@ -65,6 +65,7 @@ async function main(): Promise<void> {
 
   for (const [index, persisted] of receipts.entries()) {
     const event = events[index];
+    console.log(`receipt_id: ${persisted.receipt.receipt_id}`);
     console.log(`receipt_path: ${persisted.receiptPath ?? "<none>"}`);
     console.log(`evidence_path: ${persisted.evidencePath ?? "<none>"}`);
     console.log(`verification: ${persisted.verificationValid ? "valid" : "invalid"}`);
@@ -74,6 +75,12 @@ async function main(): Promise<void> {
     console.log(`event_sequence: ${event.event_sequence ?? "<missing>"}`);
     console.log(`boundary_type: ${event.boundary_type ?? "<missing>"}`);
     console.log(`receipt_role: ${persisted.receipt.receipt_role}`);
+    console.log(
+      `host_attestation: ${persisted.hostAttestationVerification ? "verified" : "unsigned"}`,
+    );
+    if (persisted.hostAttestationVerification) {
+      console.log(`host_public_key_id: ${persisted.hostAttestationVerification.publicKeyId}`);
+    }
     for (const comparison of persisted.hashComparisons) {
       console.log(`hash_${formatHashComparison(comparison)}`);
     }
