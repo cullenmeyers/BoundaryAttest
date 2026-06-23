@@ -15,6 +15,17 @@ When an agent calls a tool, BoundaryAttest can:
 - chain the receipt to previous receipts
 - check later that the receipt chain is intact
 
+## Proof Kit v0.1
+
+The [BoundaryAttest Proof Kit v0.1](examples/proof-kit/) is a small example/demo artifact for understanding BoundaryAttest. It contains three signed demo receipts and a tiny verifier.
+
+```sh
+npm run build
+npm run example:proof-kit
+```
+
+The proof kit uses demo-only signer trust. Receipts prove signature and content integrity only; they do not prove truth, authorization, compliance, runtime integrity, or business outcome.
+
 ## Best Conceptual Demo
 
 ```sh
