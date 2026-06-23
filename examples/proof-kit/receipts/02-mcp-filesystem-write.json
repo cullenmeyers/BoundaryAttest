@@ -1,0 +1,23 @@
+{
+  "receipt_id": "proof-kit-002-mcp-filesystem-write",
+  "agent_id": "boundaryattest-proof-kit-demo",
+  "tool": "mcp.filesystem.write_file",
+  "action_status": "success",
+  "timestamp": "2026-06-22T12:01:00.000Z",
+  "receipt_role": "client_observed",
+  "receipt_policy": {
+    "mode": "required",
+    "reason": "MCP file write crosses a local filesystem trust boundary"
+  },
+  "caller_type": "agent",
+  "caller_id": "agent:demo-assistant",
+  "lineage_ref": "approval:demo-write-001",
+  "lineage_type": "approval",
+  "lineage_hash": "sha256:8d76cf5176d7a31c5f113e3f4a88df2e4f0a59819ddc2db2440eac309ed55714",
+  "lineage_label": "Approved write to project notes",
+  "input_hash": "1966e9ba6f9eb77fab06d8f2e54385d580f5cdbea99a14ab6d833ba180ef87d0",
+  "output_hash": "f864735c7fee3698e8e11162fe2e22b441b9ce4b8ad1c15e43ef303b1bf1bbaa",
+  "previous_receipt_hash": "03b642369cdd8389c71419feb7392a4817567d9c545ba0480116920851be87a2",
+  "public_key_id": "proof-kit-demo:a41f66563e585bd7de46f36e",
+  "signature": "p8IvedB5jP6sNcGIZKz6TJgp8bGQt/nTnGTdxEZLQqJqQcnsRD7I/zf4pIN2HT0vzUradBFhLcD6v05ev5+fCg=="
+}

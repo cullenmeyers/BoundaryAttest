@@ -29,6 +29,7 @@
     "example:mcp-server": "node dist/examples/mcp-server-receipt-demo.js",
     "example:trust-boundary": "node dist/examples/trust-boundary-demo.js",
     "example:intergrax-poc": "node dist/examples/intergrax-poc/run.js",
+    "example:proof-kit": "node dist/examples/proof-kit/verify-proof-kit.js",
     "reset:demo": "node scripts/reset-demo.mjs",
     "reset:all": "node scripts/reset-all.mjs",
     "demo:clean": "npm run reset:demo && npm run build && npm run example:mcp-real && npm run chain"

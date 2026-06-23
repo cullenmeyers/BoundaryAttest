@@ -1,0 +1,24 @@
+{
+  "receipt_id": "proof-kit-003-private-data-to-public-dashboard",
+  "agent_id": "boundaryattest-proof-kit-demo",
+  "tool": "tablecharts.publish_dashboard",
+  "action_status": "success",
+  "timestamp": "2026-06-22T12:02:00.000Z",
+  "receipt_role": "client_observed",
+  "receipt_policy": {
+    "mode": "required",
+    "reason": "private business data became a shareable dashboard artifact"
+  },
+  "caller_type": "human",
+  "caller_id": "human:demo-operator",
+  "caller_auth_ref": "approval-session:demo-publication",
+  "lineage_ref": "approval:dashboard-publication-001",
+  "lineage_type": "approval",
+  "lineage_hash": "sha256:2bb10403bf6a4213ce437399001e613d898773e101abf61c3ee688f20316fd64",
+  "lineage_label": "Approved dashboard publication",
+  "input_hash": "702cb922b44261d9c71c258b4a0bae83604aa1a6e170ce578ce1c52651d3b6c7",
+  "output_hash": "59c4048ebac2afd0205e7ec2fd14e7b69524f0602c2e70d41fcf42e372c5661c",
+  "previous_receipt_hash": "ee1429705f6bed11cc97550e2b4d47ecaebc7bc5db92608b397aa7228409dc95",
+  "public_key_id": "proof-kit-demo:a41f66563e585bd7de46f36e",
+  "signature": "zlfYrYCifO6JYYkviX1Uq4kEuyin8E2JQzqEZ8VbwuOWpOSURcnaF1/in12IVPdmaFizMV1xN+MopC/IvaAnCw=="
+}

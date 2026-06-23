@@ -1,0 +1,23 @@
+{
+  "receipt_id": "proof-kit-001-host-signed-boundary-event",
+  "agent_id": "boundaryattest-proof-kit-demo",
+  "tool": "intergrax.ebe9.boundary_event",
+  "action_status": "success",
+  "timestamp": "2026-06-22T12:00:00.000Z",
+  "receipt_role": "client_observed",
+  "receipt_policy": {
+    "mode": "required",
+    "reason": "consequential host-signed boundary event observed by client adapter"
+  },
+  "caller_type": "service",
+  "caller_id": "intergrax-attestation-demo",
+  "lineage_ref": "intergrax-run:demo-run-001/event:ebe9-001",
+  "lineage_type": "execution_record",
+  "lineage_hash": "sha256:5c8ab6d4a32936d9fd2447767d8b6d2d78ca983b7deab2bbdd4d8692e9b0fd65",
+  "lineage_label": "Intergrax EBE-9 demo event",
+  "input_hash": "b487d90290c2fc4a9a1ceaced146e990414140675edf0ea2e1cc3ade21b63981",
+  "output_hash": "b8ec507dc0d298dba179ac43987843df97bf38273274f3e06c5f7d19f60ebf8f",
+  "previous_receipt_hash": null,
+  "public_key_id": "proof-kit-demo:a41f66563e585bd7de46f36e",
+  "signature": "JTnKv2LpqoWfIZg/Zd72XaERSY7NFzfVXw7dqduxSh8B7KWLvDW6h05jZJjkvPV74yQYGOwqnNwVviBnVp7MBg=="
+}
