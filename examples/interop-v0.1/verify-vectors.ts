@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { createHash, verify } from "node:crypto";
+import { createHash, createPublicKey, verify } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { stableJson } from "../../src/hash.js";
@@ -76,8 +76,9 @@ function hasOwn(value: Record<string, unknown>, field: string): boolean {
 }
 
 function publicKeyId(publicKeyPem: string): string {
-  const digest = createHash("sha256").update(publicKeyPem).digest("hex");
-  return `sha256:${digest.slice(0, 24)}`;
+  const spkiDer = createPublicKey(publicKeyPem).export({ type: "spki", format: "der" });
+  const digest = createHash("sha256").update(spkiDer).digest("hex");
+  return `sha256:${digest}`;
 }
 
 function verifyInteropReceipt(receiptText: string, publicKeyPem: string): VerificationResult {

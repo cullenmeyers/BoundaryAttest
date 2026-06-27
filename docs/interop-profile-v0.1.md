@@ -4,7 +4,7 @@ Status: experimental compatibility target. This is not a final standard.
 
 This profile defines a small portable envelope that external adapters can emit and independent verifiers can check. It does not replace BoundaryAttest's existing native receipt shape or the proof-kit examples. A compatible receipt is a portable signed claim: it shows that a particular key signed the included claim and that the signed claim has not changed. It does not prove truth, authorization, compliance, signer trustworthiness, runtime integrity, or business outcome.
 
-Existing BoundaryAttest runtime and proof-kit receipts are flat JSON objects: their claim fields, `public_key_id`, and `signature` are siblings. Interop Profile v0.1 receipts instead use the `claim` envelope below and sign exactly that nested object. The profile is a separate adapter compatibility target; it does not invalidate existing receipts or make them malformed. The proof kit also uses a demo-specific key label rather than the v0.1 key-ID convention.
+Existing BoundaryAttest runtime and proof-kit receipts are flat JSON objects: their claim fields, `public_key_id`, and `signature` are siblings. Interop Profile v0.1 receipts instead use the `claim` envelope below and sign exactly that nested object. The profile is a separate adapter compatibility target; it does not invalidate existing receipts or make them malformed. Existing flat proof-kit/native receipts may continue to use their demo/native key label or fingerprint convention rather than the v0.1 key-ID convention.
 
 ## Receipt shape
 
@@ -64,7 +64,7 @@ Example envelope:
     "artifact_hash": "sha256:2a2b12fac0255b18b17bb813d98119f80561c49cee411af3ce27e344bed32023"
   },
   "signature": "base64-ed25519-signature",
-  "public_key_id": "sha256:d795438daa66a97f5deb0886"
+  "public_key_id": "sha256:4145925191b02ff60e26109854f74a558e941539a72e1f3bd086eadad1eb1995"
 }
 ```
 
@@ -106,20 +106,22 @@ Passing v0.1 verification means only that the envelope is structurally compatibl
 
 ## Key convention
 
-The convention matches the current local BoundaryAttest implementation:
+Interop Profile v0.1 uses this key convention:
 
 - Algorithm: Ed25519.
 - Public key: PEM-encoded SubjectPublicKeyInfo (SPKI), including the normal `BEGIN PUBLIC KEY` and `END PUBLIC KEY` lines.
 - Private key for development and tests only: PEM-encoded PKCS #8, including the normal `BEGIN PRIVATE KEY` and `END PRIVATE KEY` lines.
-- `public_key_id`: SHA-256 of the exact UTF-8 public-key PEM text, take the first 24 lowercase hexadecimal characters, then prefix them with `sha256:`. The trailing newline is part of the PEM text used by the current implementation.
+- `public_key_id`: SHA-256 of the DER-encoded SPKI public-key bytes, encoded as all 64 lowercase hexadecimal characters and prefixed with `sha256:`.
 
 In pseudocode:
 
 ```text
-public_key_id = "sha256:" + hex(sha256(utf8(public_key_pem)))[0:24]
+public_key_id = "sha256:" + hex(sha256(spki_der_public_key_bytes))
 ```
 
-The identifier is a compact key fingerprint, not a registry lookup or proof that a signer should be trusted. Production key custody should use organization-managed keys or an appropriate KMS/HSM rather than the repository's local development key files.
+The DER fingerprint is independent of PEM line wrapping and newline formatting, making it stable across equivalent PEM encodings and suitable for external adapter interoperability. This convention applies specifically to Interop Profile v0.1 envelopes. Existing flat proof-kit/native receipts may retain their existing demo/native key labels or fingerprints.
+
+The identifier is a key fingerprint, not a registry lookup or proof that a signer should be trusted. Production key custody should use organization-managed keys or an appropriate KMS/HSM rather than the repository's local development key files.
 
 ## Test vectors
 
