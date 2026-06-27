@@ -26,6 +26,8 @@ npm run example:proof-kit
 
 The proof kit uses demo-only signer trust. Receipts prove signature and content integrity only; they do not prove truth, authorization, compliance, runtime integrity, or business outcome.
 
+External adapters can target the minimal, experimental [BoundaryAttest Interop Profile v0.1](docs/interop-profile-v0.1.md).
+
 ## Best Conceptual Demo
 
 ```sh
