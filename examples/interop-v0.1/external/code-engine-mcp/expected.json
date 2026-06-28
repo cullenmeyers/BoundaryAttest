@@ -1,0 +1,12 @@
+{
+  "profile": "BoundaryAttest Interop Profile v0.1 (reverse — CE producer, external verifier)",
+  "public_key_file": "public.pem",
+  "public_key_id": "sha256:6e7a3d1d6208531b1595bbcf6a13bc5c08da3966196d5758b71a449aee75a4cc",
+  "receipt_dir": ".",
+  "cases": [
+    { "receipt": "01-write_or_modify_file-executed.json", "expected": "pass" },
+    { "receipt": "02-write_or_modify_file-executed.json", "expected": "pass" },
+    { "receipt": "03-update-executed.json", "expected": "pass" },
+    { "receipt": "04-update-failed.json", "expected": "pass" }
+  ]
+}

@@ -2,6 +2,8 @@
 
 Status: experimental compatibility target. This is not a final standard.
 
+A machine-readable receipt structure is available as [JSON Schema](schemas/interop-receipt-v0.1.schema.json). See [Interop v0.1 verification: trust and limitations](interop-verification-limits-v0.1.md) before relying on a verification result.
+
 This profile defines a small portable envelope that external adapters can emit and independent verifiers can check. It does not replace BoundaryAttest's existing native receipt shape or the proof-kit examples. A compatible receipt is a portable signed claim: it shows that a particular key signed the included claim and that the signed claim has not changed. It does not prove truth, authorization, compliance, signer trustworthiness, runtime integrity, or business outcome.
 
 Existing BoundaryAttest runtime and proof-kit receipts are flat JSON objects: their claim fields, `public_key_id`, and `signature` are siblings. Interop Profile v0.1 receipts instead use the `claim` envelope below and sign exactly that nested object. The profile is a separate adapter compatibility target; it does not invalidate existing receipts or make them malformed. Existing flat proof-kit/native receipts may continue to use their demo/native key label or fingerprint convention rather than the v0.1 key-ID convention.
@@ -44,6 +46,10 @@ The following claim fields are optional:
 - adapter-specific fields
 
 Adapter-specific fields belong inside `claim` so they are signed. Verifiers may ignore claim fields they do not understand. An adapter may retain any local event shape it needs as long as it can map that event into this portable receipt shape.
+
+The envelope does not allow additional top-level fields. Keeping extensions inside `claim` ensures they are covered by the signature and prevents unsigned envelope metadata from being mistaken for verified content. The JSON Schema therefore sets `additionalProperties` to `false` at the top level and allows adapter-specific properties inside `claim`.
+
+Known hash fields accept either a string or `null` because producers may represent an inapplicable or unavailable hash explicitly. v0.1 does not impose a hash-algorithm vocabulary or digest pattern on those claim fields.
 
 `previous_receipt_hash` is optional and future-facing unless the producer maintains a real chain. Its presence alone does not establish a complete or correctly ordered history.
 
@@ -97,12 +103,15 @@ These are policy-layer checks, not mandatory v0.1 cryptographic checks:
 
 - timestamp freshness
 - key revocation
+- key rotation
 - signer trust
 - authorization, grant, or policy validity
 - artifact availability
 - replay or reconstruction sufficiency
 
 Passing v0.1 verification means only that the envelope is structurally compatible, the expected key identifier matches, and the expected key signed the unchanged claim.
+
+The separate [trust and limitations note](interop-verification-limits-v0.1.md) defines this boundary in more detail.
 
 ## Key convention
 
@@ -127,9 +136,12 @@ The identifier is a key fingerprint, not a registry lookup or proof that a signe
 
 Static vectors are in [`examples/interop-v0.1/test-vectors/`](../examples/interop-v0.1/test-vectors/). They cover a valid receipt, a tampered claim, the wrong public key, an unsupported version, and a missing required field.
 
+The reverse interop fixture and its source notes are in [`examples/interop-v0.1/external/code-engine-mcp/`](../examples/interop-v0.1/external/code-engine-mcp/).
+
 Run them with:
 
 ```sh
 npm run build
 npm run example:interop-v0.1
+npm run example:interop-code-engine
 ```

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://boundaryattest.com/schemas/interop-receipt-v0.1.schema.json",
+  "title": "BoundaryAttest Interop Profile v0.1 receipt",
+  "description": "A signed BoundaryAttest Interop Profile v0.1 claim envelope.",
+  "type": "object",
+  "required": ["claim", "signature", "public_key_id"],
+  "properties": {
+    "claim": {
+      "type": "object",
+      "required": [
+        "receipt_version",
+        "receipt_role",
+        "event_id",
+        "timestamp",
+        "action_type",
+        "status"
+      ],
+      "properties": {
+        "receipt_version": {
+          "const": "0.1"
+        },
+        "receipt_role": {
+          "enum": ["client_observed", "server_attested"]
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "action_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_ref": {
+          "type": "string"
+        },
+        "artifact_hash": {
+          "type": ["string", "null"]
+        },
+        "trace_ref": {
+          "type": "string"
+        },
+        "lineage_ref": {
+          "type": "string"
+        },
+        "tool_name": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "git_ref": {
+          "type": "string"
+        },
+        "input_hash": {
+          "type": ["string", "null"]
+        },
+        "output_hash": {
+          "type": ["string", "null"]
+        },
+        "error_hash": {
+          "type": ["string", "null"]
+        },
+        "previous_receipt_hash": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "signature": {
+      "type": "string",
+      "minLength": 1,
+      "contentEncoding": "base64"
+    },
+    "public_key_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

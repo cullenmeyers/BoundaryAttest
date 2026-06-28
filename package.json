@@ -31,6 +31,7 @@
     "example:intergrax-poc": "node dist/examples/intergrax-poc/run.js",
     "example:proof-kit": "node dist/examples/proof-kit/verify-proof-kit.js",
     "example:interop-v0.1": "node dist/examples/interop-v0.1/verify-vectors.js",
+    "example:interop-code-engine": "node dist/examples/interop-v0.1/verify-code-engine.js",
     "reset:demo": "node scripts/reset-demo.mjs",
     "reset:all": "node scripts/reset-all.mjs",
     "demo:clean": "npm run reset:demo && npm run build && npm run example:mcp-real && npm run chain"

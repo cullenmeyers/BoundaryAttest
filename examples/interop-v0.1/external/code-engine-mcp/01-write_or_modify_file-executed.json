@@ -1,0 +1,23 @@
+{
+  "claim": {
+    "receipt_version": "0.1",
+    "receipt_role": "client_observed",
+    "event_id": "2426ffca-8ca3-43b5-8652-2972a0309bf1",
+    "timestamp": "2026-06-27T03:12:25.590Z",
+    "tool_name": "workspace.write_or_modify_file",
+    "action_type": "write_or_modify_file",
+    "status": "executed",
+    "target_ref": "path:src/main.ts",
+    "session_id": "session:deploy-v2-20260626-1400",
+    "task_id": "task:scaffold-app",
+    "input_hash": "sha256:eb304bf446131876d6f558c03cc51ca48a442001879ef6251c9a59c987c26fb0",
+    "output_hash": "sha256:0f4d7f76d37967faca758243476f4f2fb2bd77d2e6521774e15f18fd619316ab",
+    "error_hash": null,
+    "trace_ref": "session:deploy-v2-20260626-1400",
+    "git_ref": "sha:abc123def",
+    "lineage_ref": "lineage:deploy-v2",
+    "previous_receipt_hash": null
+  },
+  "signature": "hgS3G3AlXzQHzN1jEDZPMTVeffTl1Mt+BLvZo18vlSTuoA76QVh0MPP4JbNlgKDzkmXXIptfZzbiM8BV+XB8Ag==",
+  "public_key_id": "sha256:6e7a3d1d6208531b1595bbcf6a13bc5c08da3966196d5758b71a449aee75a4cc"
+}

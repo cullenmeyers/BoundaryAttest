@@ -1,0 +1,23 @@
+{
+  "claim": {
+    "receipt_version": "0.1",
+    "receipt_role": "client_observed",
+    "event_id": "3cf0e02d-6c5b-45c0-939c-6e3c22f2dbad",
+    "timestamp": "2026-06-27T03:12:55.592Z",
+    "tool_name": "ibmcloud.code-engine.application.update",
+    "action_type": "write_or_modify_file",
+    "status": "executed",
+    "target_ref": "ce:us-south/my-project/my-app",
+    "session_id": "session:deploy-v2-20260626-1400",
+    "task_id": "task:deploy-app",
+    "input_hash": "sha256:c9e6000ad5bbec433349e2298ad5054d34894d734582361f7472d060cddba04f",
+    "output_hash": "sha256:d99595f0499a5091b29fcb918130535876c7d875941d9f4ef21c11be81c49b54",
+    "error_hash": null,
+    "trace_ref": "session:deploy-v2-20260626-1400",
+    "git_ref": "sha:abc123def",
+    "lineage_ref": "lineage:deploy-v2",
+    "previous_receipt_hash": null
+  },
+  "signature": "dW1n65fWPRXqICMRS4P801uwSO91N8IXBXWSniSbutvBliGAiBD6m1GPcHs9MZOCOUkwlLG2u5Jnu+LzQK81BQ==",
+  "public_key_id": "sha256:6e7a3d1d6208531b1595bbcf6a13bc5c08da3966196d5758b71a449aee75a4cc"
+}

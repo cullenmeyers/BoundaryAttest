@@ -1,0 +1,24 @@
+{
+  "claim": {
+    "receipt_version": "0.1",
+    "receipt_role": "client_observed",
+    "event_id": "7f8ccd19-1c02-428b-811f-5db045121b13",
+    "timestamp": "2026-06-27T03:12:40.592Z",
+    "tool_name": "workspace.write_or_modify_file",
+    "action_type": "write_or_modify_file",
+    "status": "executed",
+    "target_ref": "path:Dockerfile",
+    "session_id": "session:deploy-v2-20260626-1400",
+    "task_id": "task:scaffold-app",
+    "artifact_hash": "sha256:4ceb563899f1f3cabd6e7a745252df2c14c298d50daea1dde7fc6113add0307a",
+    "input_hash": "sha256:d48afda45c3127a8e4577441df770a6471f8150bc7087f18099578f09f531989",
+    "output_hash": "sha256:08f142f09b0b54d99a62967d7ab859059caadb0566d48a90ffd9393d8cb859e8",
+    "error_hash": null,
+    "trace_ref": "session:deploy-v2-20260626-1400",
+    "git_ref": "sha:abc123def",
+    "lineage_ref": "lineage:deploy-v2",
+    "previous_receipt_hash": null
+  },
+  "signature": "vyV+YqnHkI/u3vqGRtAJH2rlDKHxomB5vHuk5mjeYCdE1FTN56zqibFllxvk57PKDeIge+GpcI37XogE4BtMCw==",
+  "public_key_id": "sha256:6e7a3d1d6208531b1595bbcf6a13bc5c08da3966196d5758b71a449aee75a4cc"
+}
