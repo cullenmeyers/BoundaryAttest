@@ -90,12 +90,32 @@ The defined field names are lowercase ASCII `snake_case`. Adapter-specific field
 A v0.1 verifier must:
 
 1. Parse the receipt as JSON.
-2. Confirm the required top-level fields exist.
+2. Confirm the receipt and `claim` are objects and the required top-level fields exist.
 3. Confirm the required claim fields exist.
 4. Reject unsupported `receipt_version` values.
-5. Canonicalize exactly the `claim` object as described above.
-6. Verify the signature over the canonical claim.
-7. Calculate the identifier of the expected public key and confirm it equals `public_key_id`.
+5. Reject unsupported `receipt_role` values.
+6. Calculate the identifier of the expected public key and confirm it equals `public_key_id`.
+7. Canonicalize exactly the `claim` object as described above.
+8. Verify the signature over the canonical claim.
+
+### Verifier failure reason codes
+
+When verification fails, a v0.1 verifier must make one of the following stable reason codes available as a machine-readable result:
+
+- `invalid_json`: the receipt input cannot be parsed as JSON.
+- `invalid_receipt`: the parsed receipt is not a JSON object, or `signature` or `public_key_id` has an invalid type.
+- `missing_top_level_field:<field>`: the receipt envelope lacks the named required top-level field.
+- `unexpected_top_level_field:<field>`: the envelope contains a top-level field other than `claim`, `signature`, or `public_key_id`.
+- `claim_not_object`: the top-level `claim` value is not a JSON object.
+- `missing_claim_field:<field>`: the claim lacks the named required field.
+- `unsupported_version`: `receipt_version` is not `"0.1"`.
+- `unsupported_receipt_role`: `receipt_role` is neither `client_observed` nor `server_attested`.
+- `public_key_id_mismatch`: `public_key_id` does not match the identifier calculated from the verifier's expected public key.
+- `invalid_signature`: the signature is malformed or does not verify over the canonical claim with the expected public key.
+
+The shared example verifier evaluates structural failures before claim compatibility, then checks the public-key identifier before the signature. In particular, it checks the supported receipt role after the supported version and before the public-key identifier and signature. Verifiers should use that precedence so the result remains deterministic when a receipt has more than one defect.
+
+These codes report only the result of Interop Profile v0.1 verification. They are not legal, compliance, or audit conclusions. Verifiers may include additional human-readable debug text, but the stable code must remain separately machine-readable and unchanged.
 
 The expected public key must come from the verifier or its caller. A key supplied beside an untrusted receipt is not a trust decision by itself.
 
@@ -106,6 +126,7 @@ These are policy-layer checks, not mandatory v0.1 cryptographic checks:
 - key rotation
 - signer trust
 - authorization, grant, or policy validity
+- compliance
 - artifact availability
 - replay or reconstruction sufficiency
 
@@ -134,7 +155,7 @@ The identifier is a key fingerprint, not a registry lookup or proof that a signe
 
 ## Test vectors
 
-Static vectors are in [`examples/interop-v0.1/test-vectors/`](../examples/interop-v0.1/test-vectors/). They cover a valid receipt, a tampered claim, the wrong public key, an unsupported version, and a missing required field.
+Static vectors are in [`examples/interop-v0.1/test-vectors/`](../examples/interop-v0.1/test-vectors/). They cover a valid receipt, a tampered claim, the wrong public key, an unsupported version, an unsupported receipt role, and a missing required field.
 
 The reverse interop fixture and its source notes are in [`examples/interop-v0.1/external/code-engine-mcp/`](../examples/interop-v0.1/external/code-engine-mcp/).
 

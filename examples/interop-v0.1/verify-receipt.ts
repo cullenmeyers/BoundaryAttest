@@ -16,8 +16,10 @@ export type FailureReason =
   | "invalid_receipt"
   | `missing_top_level_field:${string}`
   | `unexpected_top_level_field:${string}`
+  | "claim_not_object"
   | `missing_claim_field:${string}`
   | "unsupported_version"
+  | "unsupported_receipt_role"
   | "public_key_id_mismatch"
   | "invalid_signature";
 
@@ -61,7 +63,11 @@ export function verifyInteropReceipt(receiptText: string, publicKeyPem: string):
     }
   }
 
-  if (!isRecord(parsed.claim) || typeof parsed.signature !== "string" || typeof parsed.public_key_id !== "string") {
+  if (!isRecord(parsed.claim)) {
+    return { ok: false, reason: "claim_not_object" };
+  }
+
+  if (typeof parsed.signature !== "string" || typeof parsed.public_key_id !== "string") {
     return { ok: false, reason: "invalid_receipt" };
   }
 
@@ -73,6 +79,10 @@ export function verifyInteropReceipt(receiptText: string, publicKeyPem: string):
 
   if (parsed.claim.receipt_version !== "0.1") {
     return { ok: false, reason: "unsupported_version" };
+  }
+
+  if (parsed.claim.receipt_role !== "client_observed" && parsed.claim.receipt_role !== "server_attested") {
+    return { ok: false, reason: "unsupported_receipt_role" };
   }
 
   if (parsed.public_key_id !== interopPublicKeyId(publicKeyPem)) {

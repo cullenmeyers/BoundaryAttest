@@ -1,0 +1,16 @@
+{
+  "claim": {
+    "receipt_version": "0.1",
+    "receipt_role": "third_party_reported",
+    "event_id": "evt_demo_unsupported_role",
+    "timestamp": "2026-06-26T12:00:00.000Z",
+    "action_type": "mcp.filesystem.write_file",
+    "status": "success",
+    "target_ref": "file:///workspace/demo.txt",
+    "artifact_hash": "sha256:2a2b12fac0255b18b17bb813d98119f80561c49cee411af3ce27e344bed32023",
+    "trace_ref": "trace:demo-001",
+    "tool_name": "filesystem.write_file"
+  },
+  "signature": "O7mTk/5vtAhuXSbh4AKsk/isTd+vn4aVJgxsyDrX+LCSWlhlAsBIVn2kCoJrvTzhBFJteFDicNxrUby0m2THAg==",
+  "public_key_id": "sha256:4145925191b02ff60e26109854f74a558e941539a72e1f3bd086eadad1eb1995"
+}

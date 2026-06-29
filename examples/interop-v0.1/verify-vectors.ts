@@ -39,6 +39,12 @@ const CASES: VectorCase[] = [
     expected: "unsupported_version",
   },
   {
+    name: "unsupported receipt role",
+    receiptFile: "unsupported-receipt-role.json",
+    publicKeyFile: "public-key.pem",
+    expected: "unsupported_receipt_role",
+  },
+  {
     name: "missing required field",
     receiptFile: "missing-required-field.json",
     publicKeyFile: "public-key.pem",
