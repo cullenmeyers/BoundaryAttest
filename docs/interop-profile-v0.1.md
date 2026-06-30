@@ -2,7 +2,7 @@
 
 Status: experimental compatibility target. This is not a final standard.
 
-A machine-readable receipt structure is available as [JSON Schema](schemas/interop-receipt-v0.1.schema.json). See [Interop v0.1 verification: trust and limitations](interop-verification-limits-v0.1.md) before relying on a verification result.
+A machine-readable receipt structure is available as [JSON Schema](schemas/interop-receipt-v0.1.schema.json). External implementers can use the [dependency-free adapter guide](interop-adapter-guide-v0.1.md). See [Interop v0.1 verification: trust and limitations](interop-verification-limits-v0.1.md) before relying on a verification result.
 
 This profile defines a small portable envelope that external adapters can emit and independent verifiers can check. It does not replace BoundaryAttest's existing native receipt shape or the proof-kit examples. A compatible receipt is a portable signed claim: it shows that a particular key signed the included claim and that the signed claim has not changed. It does not prove truth, authorization, compliance, signer trustworthiness, runtime integrity, or business outcome.
 
@@ -30,10 +30,10 @@ The profile requires these fields to be present but deliberately does not define
 The following claim fields are strongly recommended:
 
 - `target_ref`
-- `artifact_hash`, or another clearly named object/content hash when there is an artifact
+- `artifact_hash`, or another clearly named object/content hash when an artifact is produced or modified
 - `trace_ref` or `lineage_ref` when available
 
-The following claim fields are optional:
+The following claim fields are optional adapter extensions:
 
 - `tool_name`
 - `session_id`
@@ -45,7 +45,9 @@ The following claim fields are optional:
 - `previous_receipt_hash`
 - adapter-specific fields
 
-Adapter-specific fields belong inside `claim` so they are signed. Verifiers may ignore claim fields they do not understand. An adapter may retain any local event shape it needs as long as it can map that event into this portable receipt shape.
+Minimal claims containing the required fields are the compatibility baseline. Extended claims add the recommended or optional fields needed for stronger reconstruction and correlation.
+
+Adapter-specific fields belong inside `claim` so they are signed. After required checks pass, verifiers should ignore unknown signed claim fields by default. Verifiers must reject claims with missing required fields. An adapter may retain any local event shape it needs as long as it can map that event into this portable receipt shape; the profile defines the portable envelope, not the adapter's local event model.
 
 The envelope does not allow additional top-level fields. Keeping extensions inside `claim` ensures they are covered by the signature and prevents unsigned envelope metadata from being mistaken for verified content. The JSON Schema therefore sets `additionalProperties` to `false` at the top level and allows adapter-specific properties inside `claim`.
 

@@ -26,7 +26,7 @@ npm run example:proof-kit
 
 The proof kit uses demo-only signer trust. Receipts prove signature and content integrity only; they do not prove truth, authorization, compliance, runtime integrity, or business outcome.
 
-External adapters can target the minimal, experimental [BoundaryAttest Interop Profile v0.1](docs/interop-profile-v0.1.md). Its [JSON Schema](docs/schemas/interop-receipt-v0.1.schema.json) and [verification trust/limitations note](docs/interop-verification-limits-v0.1.md) define the structural contract and the narrow meaning of a passing check.
+External adapters can target the minimal, experimental [BoundaryAttest Interop Profile v0.1](docs/interop-profile-v0.1.md); the [dependency-free adapter guide](docs/interop-adapter-guide-v0.1.md) provides the short implementation path. Its [JSON Schema](docs/schemas/interop-receipt-v0.1.schema.json) and [verification trust/limitations note](docs/interop-verification-limits-v0.1.md) define the structural contract and the narrow meaning of a passing check.
 
 ## Best Conceptual Demo
 
