@@ -40,7 +40,10 @@ jobs:
         run: npm run example:proof-kit
 
       - name: Validate receipt chain
-        run: npm run chain
+        run: |
+          npm run reset:demo
+          npm run demo
+          npm run chain
 
       - name: Run tests
         run: npm test
