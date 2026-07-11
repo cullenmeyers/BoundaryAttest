@@ -71,18 +71,24 @@ For example, a project-owned result artifact might look like this:
 
 This shape is illustrative only. It is not normative, not a BoundaryAttest schema, and not a recommendation that benchmark producers use these field names.
 
-## Artifact hashing semantics
+## Dual artifact hashes
 
-By default, `artifact_hash` should mean the SHA-256 hash of the exact result artifact bytes that are published, archived, emailed, or handed off. Raw bytes are the simplest default because the verifier can obtain the artifact, hash exactly what it received, and compare that digest to the signed claim.
+Benchmark/eval receipts may carry two artifact hashes because the hashes answer different questions:
+
+- `full_artifact_hash`: SHA-256 over the exact raw result artifact bytes. It answers: "these exact bytes existed."
+- `public_canonical_artifact_hash`: SHA-256 over a documented, normalized public representation. It answers: "this public artifact is reproducibly checkable by an external verifier."
+
+The full artifact and public artifact may be the same input, but they do not have to be. Keeping the meanings distinct avoids quietly turning `artifact_hash` into "the hash after removing whatever is inconvenient." A project may use either hash or both, but it should name the selected semantics explicitly.
 
 Some benchmark or eval result JSON may contain volatile machine-local fields such as local key paths, output paths, temp directories, absolute runner paths, or other environment-specific references. Hashing the raw bytes of an internal result file can make external reproduction difficult when the public artifact intentionally redacts or omits those fields.
 
-For those cases, a project may define a canonical artifact representation for computing the artifact hash. This is artifact-level canonicalization only. It is separate from BoundaryAttest's signed-claim canonicalization and does not change signature behavior, verifier behavior, interop profile semantics, schemas, or the canonicalization of signed claims.
+For those cases, a project may define a canonical public artifact representation. This is artifact-level canonicalization only. It is separate from BoundaryAttest's signed-claim canonicalization and does not change signature behavior, verifier behavior, interop profile semantics, schemas, or the canonicalization of signed claims.
 
-If a project uses a canonical representation instead of raw bytes, the receipt claim should say so explicitly with fields such as:
+If a project uses dual hashes, the receipt claim might describe them with fields such as:
 
-- `artifact_hash_alg`, such as `"sha256"`
-- `artifact_hash_semantics`, such as `"raw-bytes"` or `"canonical-json"`
+- `full_artifact_hash_alg`, such as `"sha256"`
+- `public_canonical_artifact_hash_alg`, such as `"sha256"`
+- `public_canonical_artifact_hash_semantics`, such as `"canonical-json"`
 - `artifact_canonicalization`, such as `"benchmark-result-public-v0.1"`
 - `artifact_canonicalization_ref`, optional
 - `canonicalization_notes`, optional
@@ -125,6 +131,56 @@ This is illustrative only, not a BoundaryAttest-wide rule. A different project m
 
 Do not use canonicalization to make inconvenient data disappear. If omitted fields matter to the claim, they should be retained, hashed separately, or disclosed through separate evidence references.
 
+## Signature binds both hashes
+
+If both hashes are used, both hash fields and their semantics must be inside the signed claim. The signature should bind:
+
+- `full_artifact_hash`
+- `full_artifact_hash_alg`
+- `public_canonical_artifact_hash`
+- `public_canonical_artifact_hash_alg`
+- `public_canonical_artifact_hash_semantics`
+- `artifact_canonicalization`
+- `artifact_canonicalization_ref`, if used
+
+This prevents someone from keeping a valid signature while swapping which representation the claim points to or changing how a verifier is instructed to interpret a digest.
+
+## Floating-point canonicalization warning
+
+Canonical JSON for benchmark/eval artifacts is not only about sorted keys and whitespace. Benchmark artifacts often contain floating-point metrics such as `avg_cost_usd`, `avg_latency_s`, and `success_rate`.
+
+Different languages or JSON libraries may serialize the same intended numeric value differently through trailing zeros, scientific notation, precision or last-digit rounding, binary floating-point representation, and integer-looking decimals. Without pinned number formatting, two honest verifiers may compute different canonical hashes.
+
+## Number formatting is part of the canonicalization profile
+
+A benchmark/eval canonicalization profile must define number handling explicitly. Acceptable approaches may include:
+
+- fixed decimal places per field
+- decimal strings in public canonical artifacts
+- integer minor units where possible, such as cost in micros or latency in milliseconds
+- a named standard canonical JSON scheme if the project adopts one
+- field-specific normalization rules documented in the canonicalization profile
+
+This example does not require one approach globally. The chosen rules belong to the artifact owner's documented, versioned canonicalization profile, not to BoundaryAttest's signed-claim canonicalization.
+
+### Illustrative profile: `benchmark-result-public-v0.1`
+
+An illustrative project profile could require the following:
+
+- remove or normalize `config.key_file`
+- remove or normalize `config.out`
+- sort object keys
+- encode as UTF-8
+- remove insignificant whitespace
+- format known metric fields deterministically:
+  - `success_rate` as a decimal string with one fixed decimal place, for example `"100.0"`
+  - `avg_cost_usd` as a decimal string with four fixed decimal places, for example `"0.0019"`
+  - `avg_latency_s` as a decimal string with two fixed decimal places, for example `"2.49"`
+  - `avg_tokens` and `runs` as integers
+- reject or explicitly handle `NaN`, `Infinity`, and `-0`
+
+The profile would also need to define rounding and behavior for missing, null, or out-of-range values. This profile is illustrative only; it is not a BoundaryAttest-wide rule or a required interop profile.
+
 ## Candidate BoundaryAttest claim
 
 A producer could publish the result artifact separately, hash the exact bytes or agreed canonical representation of that artifact, and sign a claim that points to the hash:
@@ -142,12 +198,14 @@ A producer could publish the result artifact separately, hash the exact bytes or
     "commit_ref": "git:example-org/example-repo@9f86d081884c7d659a2feaa0c55ad015",
     "run_ref": "ci://example-ci/runs/123456",
     "result_artifact_ref": "https://benchmarks.example.org/results/123456.json",
-    "artifact_hash": "sha256:example-full-result-artifact-digest",
-    "artifact_hash_alg": "sha256",
-    "artifact_hash_semantics": "raw-bytes",
-    "artifact_canonicalization": null,
-    "artifact_canonicalization_ref": null,
-    "canonicalization_notes": null,
+    "full_artifact_hash": "sha256:example-full-result-artifact-digest",
+    "full_artifact_hash_alg": "sha256",
+    "public_canonical_artifact_hash": "sha256:example-public-canonical-artifact-digest",
+    "public_canonical_artifact_hash_alg": "sha256",
+    "public_canonical_artifact_hash_semantics": "canonical-json",
+    "artifact_canonicalization": "benchmark-result-public-v0.1",
+    "artifact_canonicalization_ref": "https://benchmarks.example.org/canonicalization/benchmark-result-public-v0.1",
+    "canonicalization_notes": "Machine-local key and output paths are normalized; metric formatting is pinned by the referenced profile.",
     "runner_ref": "ci-runner://example-ci/linux-x64/pool/default",
     "environment_ref": "container://registry.example.org/bench-runner@sha256:example-image-digest",
     "publisher_ref": "https://benchmarks.example.org/publishers/example-team"
@@ -159,7 +217,7 @@ A producer could publish the result artifact separately, hash the exact bytes or
 
 This is a candidate claim shape, not a required profile. The fields `runner_ref`, `environment_ref`, and `publisher_ref` are optional references for correlation. Their presence does not prove runtime integrity, environment cleanliness, publication honesty, or authorization.
 
-The producer and verifier must agree what bytes are hashed. A hash over the downloaded result file, including its exact JSON formatting, is simple and clear. A hash over a canonicalized form can also work if the artifact owner defines that canonicalization. BoundaryAttest should not silently invent benchmark-result canonicalization rules.
+The producer and verifier must agree what bytes each digest covers. A hash over the exact result file, including its JSON formatting, is simple and clear. A second hash over a canonicalized public form can support reproducible external checking if the artifact owner defines that canonicalization. BoundaryAttest should not silently invent benchmark-result canonicalization rules.
 
 ## Verification flow
 
@@ -173,22 +231,24 @@ The verifier then:
 
 1. Checks the receipt signature using the expected public key.
 2. Checks that `public_key_id` matches the expected public key identifier.
-3. Recomputes the hash of the result JSON artifact using the agreed artifact hashing rules.
-4. Checks that the recomputed hash equals `claim.artifact_hash`.
+3. Recomputes each applicable hash using the agreed artifact hashing rules.
+4. Checks each recomputed hash against its corresponding field in the signed claim.
 5. Separately decides whether it trusts the signer, benchmark method, benchmark implementation, run context, and published interpretation.
 
 Passing these checks establishes only that the expected signer signed an unchanged claim binding that claim to the supplied artifact hash. It does not establish that the benchmark result is true, meaningful, authorized, or fairly described.
 
-## Verification flow for canonical artifact hashes
+## Verification flow for raw and canonical artifact hashes
 
-If `claim.artifact_hash_semantics` names a canonical representation such as `"canonical-json"`, verification has an additional artifact-level step:
+When one or both artifact hashes are present, the artifact-level flow is:
 
-1. The verifier obtains the public artifact.
-2. The verifier applies the named canonicalization rules, such as `claim.artifact_canonicalization`.
-3. The verifier serializes the canonical representation deterministically, for example with sorted keys, no insignificant whitespace, and UTF-8 encoding.
-4. The verifier computes the SHA-256 hash of that canonical artifact representation.
-5. The verifier compares the recomputed digest to `claim.artifact_hash`.
-6. The verifier separately decides whether the canonicalization omitted material evidence.
+1. The verifier obtains the raw artifact and/or public artifact.
+2. If the raw bytes are available, the verifier computes SHA-256 over those exact bytes and compares it with signed `claim.full_artifact_hash`.
+3. If `public_canonical_artifact_hash` is used, the verifier applies the named `artifact_canonicalization` profile to the public artifact.
+4. The verifier applies the profile's pinned number-formatting rules.
+5. The verifier serializes the normalized public representation deterministically, including the profile's key ordering, whitespace, and UTF-8 rules.
+6. The verifier computes SHA-256 over those canonical bytes.
+7. The verifier compares the digest with signed `claim.public_canonical_artifact_hash`.
+8. The verifier separately decides whether the canonicalization omitted material evidence.
 
 These steps are about the artifact hash only. They do not alter BoundaryAttest claim canonicalization, receipt signature verification, or interop behavior.
 
@@ -203,8 +263,11 @@ The benchmark result receipt is narrower: it is an artifact-publication binding 
 ## Open questions
 
 - Should the action type be `benchmark.result.published`, `eval.result.published`, or something more generic?
+- Should benchmark/eval examples prefer raw hash only, canonical hash only, or dual hash by default?
+- Should metrics be represented as strings in public canonical artifacts?
+- Should canonicalization profiles reject floats entirely and require decimal strings or integer units?
+- Should run-level receipts carry separate hashes or remain inside the full artifact hash?
 - Should both an aggregate-result hash and a full-artifact hash be supported?
-- Are run-level receipts useful, or are they too noisy for benchmark suites with many cases?
 - How should runner and environment references be represented without implying runtime integrity?
 - How should public key discovery work for public benchmark sites?
-- Should benchmark/eval examples support both `full_artifact_hash` for exact raw bytes and `public_canonical_artifact_hash` for reproducible public verification?
+- How should canonicalization profiles reference standards without forcing them into BoundaryAttest core?
