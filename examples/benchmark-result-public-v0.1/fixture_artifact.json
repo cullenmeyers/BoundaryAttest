@@ -1,0 +1,43 @@
+{
+  "config": {
+    "model": "claude-haiku-4-5",
+    "suite": "cross_framework",
+    "reps": 1,
+    "max_turns": 10,
+    "key_file": "<redacted-local-path>",
+    "out": "<redacted-local-path>"
+  },
+  "agg": {
+    "framework": "langgraph-react",
+    "runs": 28,
+    "success_rate": 100.0,
+    "avg_tokens": 1424,
+    "avg_cost_usd": 0.0019,
+    "avg_turns": 2,
+    "avg_latency_s": 2.49
+  },
+  "runs": [
+    {
+      "task": "speed",
+      "rep": 0,
+      "ok": true,
+      "tokens": 1377,
+      "cost": 0.001741,
+      "turns": 2,
+      "latency_s": 7.35,
+      "success": true,
+      "summary": "40"
+    },
+    {
+      "task": "ratio",
+      "rep": 0,
+      "ok": true,
+      "tokens": 1447,
+      "cost": 0.001959,
+      "turns": 2,
+      "latency_s": 6.28,
+      "success": true,
+      "summary": "2.8"
+    }
+  ]
+}

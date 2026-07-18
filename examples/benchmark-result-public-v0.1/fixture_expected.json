@@ -1,0 +1,13 @@
+{
+  "profile": "benchmark-result-public-v0.1",
+  "profile_ref": "https://github.com/cullenmeyers/BoundaryAttest/blob/main/docs/benchmark-result-receipt-example.md",
+  "note": "Interop target = public_canonical_artifact_hash (serialization-independent). full_artifact_hash is over the exact bytes of fixture_artifact.json (json indent=2). public_canonical_artifact_bytes is the exact string that gets SHA-256ed; diff against your TS canonicalizer output before comparing hashes.",
+  "public_canonical_artifact_bytes": "{\"agg\":{\"avg_cost_usd\":\"0.0019\",\"avg_latency_s\":\"2.49\",\"avg_tokens\":1424,\"avg_turns\":2,\"framework\":\"langgraph-react\",\"runs\":28,\"success_rate\":\"100.0\"},\"config\":{\"max_turns\":10,\"model\":\"claude-haiku-4-5\",\"reps\":1,\"suite\":\"cross_framework\"}}",
+  "public_canonical_artifact_hash": "sha256:296f0943a7a1e55f4e287800680278e5a0b287a8a691f4fd45c363e4f5844383",
+  "public_canonical_artifact_hash_alg": "sha256",
+  "public_canonical_artifact_hash_semantics": "canonical-json",
+  "full_artifact_hash": "sha256:d30a4d28f6ffb837023132719f5288b904a6ff15e041dc5963016654e123d9f9",
+  "full_artifact_hash_alg": "sha256",
+  "artifact_canonicalization": "benchmark-result-public-v0.1",
+  "canonicalization_notes": "Dropped config.key_file and config.out. Pinned agg numbers per benchmark-result-public-v0.1 (success_rate=1dp, avg_cost_usd=4dp, avg_latency_s=2dp, avg_tokens=int, runs=int). Canonical artifact = config (minus those two) + agg; runs[] left out (v0.1 doesn't specify it). Keys sorted, no extra whitespace, UTF-8/ASCII. NaN/Inf rejected, -0 -> 0."
+}
