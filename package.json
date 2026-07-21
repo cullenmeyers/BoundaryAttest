@@ -32,6 +32,7 @@
     "example:proof-kit": "node dist/examples/proof-kit/verify-proof-kit.js",
     "example:interop-v0.1": "node dist/examples/interop-v0.1/verify-vectors.js",
     "example:interop-code-engine": "node dist/examples/interop-v0.1/verify-code-engine.js",
+    "example:trustmcp-post-scan": "node dist/examples/trustmcp-post-scan-receipt/trustmcp-post-scan-receipt.js",
     "example:benchmark-result-public-v0.1": "node dist/examples/benchmark-result-public-v0.1/verify-canonical-artifact.js",
     "reset:demo": "node scripts/reset-demo.mjs",
     "reset:all": "node scripts/reset-all.mjs",

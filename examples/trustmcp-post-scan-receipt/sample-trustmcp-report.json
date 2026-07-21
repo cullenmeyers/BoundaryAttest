@@ -1,0 +1,51 @@
+{
+  "tool": {
+    "name": "TrustMCP",
+    "version": "0.8.0"
+  },
+  "target": {
+    "input": "https://github.com/example/weather-mcp",
+    "displayName": "Example Weather MCP Server",
+    "sourceType": "git",
+    "resolvedRef": "git+https://github.com/example/weather-mcp@4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+  },
+  "coverage": {
+    "rulesEvaluated": 12,
+    "filesExamined": 18,
+    "entrypointsExamined": 2
+  },
+  "limitations": [
+    "Synthetic example: no server process was started.",
+    "Dynamic behavior and remote dependencies were not evaluated."
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 1,
+    "total": 2
+  },
+  "findings": [
+    {
+      "id": "TMCP-EXAMPLE-001",
+      "ruleId": "mcp/tool-description-too-broad",
+      "severity": "medium",
+      "message": "A synthetic tool description is broader than its implementation.",
+      "location": "src/tools/weather.ts:14"
+    },
+    {
+      "id": "TMCP-EXAMPLE-002",
+      "ruleId": "mcp/missing-timeout",
+      "severity": "low",
+      "message": "A synthetic outbound request does not set an explicit timeout.",
+      "location": "src/client.ts:31"
+    }
+  ],
+  "newFindings": [
+    {
+      "id": "TMCP-EXAMPLE-002",
+      "ruleId": "mcp/missing-timeout",
+      "severity": "low"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "failOn": "high",
+  "scanMode": "static",
+  "rules": {
+    "mcp/tool-description-too-broad": "warn",
+    "mcp/missing-timeout": "warn",
+    "mcp/credential-exposure": "error"
+  },
+  "ruleMetadata": {
+    "profile": "trustmcp-default",
+    "revision": "2026-07-01",
+    "enabledRuleIds": [
+      "mcp/credential-exposure",
+      "mcp/missing-timeout",
+      "mcp/tool-description-too-broad"
+    ]
+  }
+}
