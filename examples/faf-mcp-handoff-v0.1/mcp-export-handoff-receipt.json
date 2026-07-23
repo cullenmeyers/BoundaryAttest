@@ -1,0 +1,38 @@
+{
+  "claim": {
+    "receipt_version": "0.1",
+    "receipt_role": "client_observed",
+    "event_id": "evt_faf_mcp_handoff_002",
+    "timestamp": "2026-07-23T18:01:00.000Z",
+    "action_type": "faf.mcp.export_handoff",
+    "status": "success",
+    "faf_surface": "mcp",
+    "faf_action": "handoff",
+    "project_ref": "faf-project:boundaryattest-review",
+    "git_ref": "refs/heads/example/faf-receipts",
+    "git_commit": null,
+    "path": ".faf/context/project.faf",
+    "artifact_ref": "file:///workspace/out/review-handoff.fafm",
+    "input_digest": "sha256:6d4ef5a92c4a4ea6bd343dc5b13f04792ed334ad018c7f99655a235879b44e95",
+    "output_digest": "sha256:ccb510648f38a57bcd9594dd4fb43e82361ccd8396c7d1f44694a9d8170d1723",
+    "artifact_hash": "sha256:996c3ce1f7e546524865a0370cceac60cfbfcd133ad8d0f57a1803e4f414f174",
+    "parent_receipt": "sha256:d84e6c11fc961e8346699474fc20d3dd00ed7b105bd2339eb0f093c218ff29ad",
+    "mcp_tool_name": "faf.export",
+    "faf_cli_command": null,
+    "signer": {
+      "public_key_id": "sha256:061d06ad28b06cd8a9c7dbe93e3f0ad5c2c51784869c4b6513af059721f752a8"
+    },
+    "verification_limits": [
+      "Does not prove the file or content is correct.",
+      "Does not prove the AI action was wise.",
+      "Does not prove authorization.",
+      "Does not replace Git.",
+      "Does not replace FAF context.",
+      "Does not replace MCP traces or logs.",
+      "Does not prove a business outcome.",
+      "Only proves that a specific signer signed a specific claim and the signed claim was not altered."
+    ]
+  },
+  "signature": "YvaIYGm+DXt/W2z9bPEF6flmlvcKXke3kKMRffIhESfX11oq2oUQ1uLTrb/lfqVMx3U07VHH/uBj3tH5T5yVCg==",
+  "public_key_id": "sha256:061d06ad28b06cd8a9c7dbe93e3f0ad5c2c51784869c4b6513af059721f752a8"
+}

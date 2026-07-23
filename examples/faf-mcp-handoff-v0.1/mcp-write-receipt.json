@@ -1,0 +1,38 @@
+{
+  "claim": {
+    "receipt_version": "0.1",
+    "receipt_role": "client_observed",
+    "event_id": "evt_faf_mcp_write_001",
+    "timestamp": "2026-07-23T18:00:00.000Z",
+    "action_type": "faf.mcp.write",
+    "status": "success",
+    "faf_surface": "mcp",
+    "faf_action": "write",
+    "project_ref": "faf-project:boundaryattest-review",
+    "git_ref": "refs/heads/example/faf-receipts",
+    "git_commit": null,
+    "path": ".faf/context/project.faf",
+    "artifact_ref": null,
+    "input_digest": "sha256:6178f7c60ee178e57e701e6b3e126d8541b2c62d2c39b8bcacdb9a30eaca1421",
+    "output_digest": "sha256:297f3028dd0004b62bbb0e28af6d79a8acd1f7ef776b3f4185a95f2cfa54518a",
+    "artifact_hash": "sha256:8bcaaf5c3160cdf20ebd8cfdf56e405953e15967f0cfb99869eb73c36c074d99",
+    "parent_receipt": null,
+    "mcp_tool_name": "faf.write",
+    "faf_cli_command": null,
+    "signer": {
+      "public_key_id": "sha256:061d06ad28b06cd8a9c7dbe93e3f0ad5c2c51784869c4b6513af059721f752a8"
+    },
+    "verification_limits": [
+      "Does not prove the file or content is correct.",
+      "Does not prove the AI action was wise.",
+      "Does not prove authorization.",
+      "Does not replace Git.",
+      "Does not replace FAF context.",
+      "Does not replace MCP traces or logs.",
+      "Does not prove a business outcome.",
+      "Only proves that a specific signer signed a specific claim and the signed claim was not altered."
+    ]
+  },
+  "signature": "FIZKLAlAi0CKU3Y1fWtwPt3JSo2iHxY4yVXyZgvo7Fyvoils5QZsEvH3PZqjysQ+zrT43MgLjOnVcsFxAAvFDg==",
+  "public_key_id": "sha256:061d06ad28b06cd8a9c7dbe93e3f0ad5c2c51784869c4b6513af059721f752a8"
+}
