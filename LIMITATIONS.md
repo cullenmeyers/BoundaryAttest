@@ -58,7 +58,7 @@ The simple linear `previous_receipt_hash` model assumes coordinated sequential o
 
 BoundaryAttest does not yet support cross-sink or global chain verification.
 
-No vendor integrations are included yet.
+The BoundaryAttest core package does not include a general vendor integration layer. External integrations are selective and host-specific.
 
 Console and memory sinks are for demo/testing, not durable audit storage.
 
@@ -70,7 +70,7 @@ BoundaryAttest works where a developer can wrap or intercept the tool-call bound
 
 It does not automatically attach to closed agent platforms.
 
-It does not provide production/external MCP server support yet.
+BoundaryAttest has an experimental external server-attested integration, but it does not provide a general production MCP server integration layer.
 
 The real MCP demo only covers local safe demo tools.
 
@@ -96,9 +96,9 @@ Failed receipts are not the same as blocked receipts.
 
 The MCP-shaped demo only demonstrates receipt generation around MCP-shaped tool calls.
 
-There is no external MCP server support yet.
+External MCP server integration is not universal; the current upstream integration covers selected host workflows only.
 
-No external MCP server support exists for server-attested receipts yet.
+Production key management, including KMS/HSM custody, rotation, revocation, and a trust registry, is not implemented.
 
 There is no Go implementation yet.
 

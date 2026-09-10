@@ -21,25 +21,31 @@ This validates source verification as a useful receipt seam, but the external en
 
 The division of responsibility matters: BoundaryAttest proves expected-key possession and signed-claim integrity. The agentenv adapter owns claim policy, artifact binding, staging, and import gating. This is an external integration example, not a partnership, endorsement, or production-deployment claim.
 
-## Pattern 3: Python-native arbitrary digest signing
+## Pattern 3: Causly server-attested workflow receipts
+
+[Causly Server PR #10](https://github.com/KNIHAL/causly-server/pull/10) is a real upstream-merged, optional BoundaryAttest Interop v0.2 `server_attested` integration. It is off by default and covers selected Causly workflow operations rather than every tool. The Causly runtime/operator controls the Ed25519 signing key, and the integration uses RFC 8785/JCS with the strict v0.2 envelope. Receipt failures do not change the underlying tool outcome.
+
+The integration remains experimental. It does not establish runtime integrity, independent truth, production-grade key custody, universal Causly support, partnership, endorsement, or production deployment.
+
+## Pattern 4: Python-native arbitrary digest signing
 
 The [Python interop example](../examples/python-interop-v0.1/) signs arbitrary host-provided artifact or action digests plus structured metadata. It emits the strict Interop Profile v0.1 envelope—`claim`, `signature`, and `public_key_id`—and requires Python's `cryptography` package. Its checked-in keys are demo-only, and its documented cross-language canonicalization limits are part of the example's compatibility boundary.
 
-## Pattern 4: benchmark/eval result artifact receipt
+## Pattern 5: benchmark/eval result artifact receipt
 
 The [benchmark/eval design note](benchmark-result-receipt-example.md) and [public-artifact example](../examples/benchmark-result-public-v0.1/) show a receipt binding a benchmark or eval artifact hash and signed metadata. That binding does not establish that the benchmark is correct, fair, representative, or complete.
 
 Where reproducibility requires both views, a producer can record a hash of the exact raw artifact bytes and a separate hash of a documented public canonical artifact. The producer must define which bytes and canonicalization each digest covers; this does not change BoundaryAttest's signed-claim canonicalization.
 
-## Pattern 5: x402 authorization-linked receipt
+## Pattern 6: x402 authorization-linked receipt
 
 The [draft x402 authorization-linked receipt profile](x402-authorization-linked-receipt-v0.1-draft.md) and [synthetic fixtures](../examples/x402-authorization-linked-receipt-v0.1/) show how an optional signed `authorization_ref` can bind a BoundaryAttest action/result receipt to a separate authorization artifact by digest. Authorization identity, cap, purpose, expiry, validity, and payment settlement remain external checks; the pattern does not change the Interop v0.1 schema or verifier.
 
-## Pattern 6: exported gate decision and asynchronous run result
+## Pattern 7: exported gate decision and asynchronous run result
 
 The [exported gate decision and run result design note](exported-gate-and-run-result-profile-v0.1-draft.md) narrows receipts to two trust-boundary seams: exported gate decisions and asynchronous result handoffs. Its signed claims carry an explicit draft profile version and self-describing digest bindings; an exported gate decision binds both the request and exact response body. It distinguishes portable public-key receipts from shared-secret webhook delivery signatures and explicitly excludes same-boundary gate calls, RBAC restatements, and generic high-volume tool-call receipts. It is a design note only and does not change the Interop v0.1 schema.
 
-## Pattern 7: Pragma bundle export receipt
+## Pattern 8: Pragma bundle export receipt
 
 The [Pragma bundle export receipt draft](pragma-bundle-export-receipt-v0.1-draft.md) and [synthetic fixture](../examples/pragma-bundle-export-receipt-v0.1/) show an external signed claim over Pragma-computed bundle, project, root, and export metadata values. Pragma remains responsible for validating the `.pragma` bundle's internal structure and content; BoundaryAttest verifies only the surrounding claim, and a relying verifier compares its fields with values from Pragma's normal verification path. This docs/examples-only pattern is not an integration, endorsement, or statement of Pragma support.
 

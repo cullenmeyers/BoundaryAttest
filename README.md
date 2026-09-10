@@ -77,7 +77,7 @@ These tools run only inside the local MCP SDK demo. They do not touch real files
 
 - Not a security guarantee.
 - Not compliance-grade audit software.
-- Not production/external MCP server support yet.
+- Not a general production MCP server integration layer.
 - Not a permission engine.
 - Not a hosted dashboard.
 
@@ -107,7 +107,7 @@ Weak use cases include:
 
 `client_observed` means BoundaryAttest signs what its client observed sending and receiving. It does not turn that observation into a claim from the executing host.
 
-`server_attested`, or host-side signing, means the executing host or runtime signs what it claims it executed. BoundaryAttest includes only local experimental demos of this mode; production host-side integration and production key custody are not implemented.
+`server_attested`, or host-side signing, means the executing host or runtime signs what it claims it executed. One experimental external integration exists for selected Causly workflows; a general production host-side integration layer and production key custody are not implemented.
 
 Both modes are only as trustworthy as the signer, its key custody, and its runtime. The local demo key in `.agentreceipt` is not production key management.
 
@@ -435,7 +435,7 @@ BoundaryAttest receipts can include `receipt_role`.
 
 `client_observed` receipts wrap `client.callTool(...)` or another client-side tool-call boundary. They are signed claims about what the client observed sending and receiving.
 
-`server_attested` receipts wrap the server-side tool handler. They are signed host/runtime claims about what the host says it executed, assuming the host key and runtime are trusted. BoundaryAttest demonstrates this only in local experimental examples; it does not provide a production host-side signing integration.
+`server_attested` receipts wrap the server-side tool handler. They are signed host/runtime claims about what the host says it executed, assuming the host key and runtime are trusted. BoundaryAttest has local experimental examples and one experimental external integration for selected Causly workflows; it does not provide a general production host-side signing integration.
 
 `npm run example:mcp-server` is a local experimental demo using the official MCP TypeScript SDK, in-memory transport, and the safe demo tools `echo.message` and `math.add`. It is not a formal standard or production trust model. See `docs/client-vs-server-receipts.md` for the short version.
 
