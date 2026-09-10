@@ -44,6 +44,7 @@
     "example:oe-mcp-action-log-receipt-v0.1": "node dist/examples/oe-mcp-action-log-receipt-v0.1/verify-example.js",
     "example:benchmark-result-public-v0.1": "node dist/examples/benchmark-result-public-v0.1/verify-canonical-artifact.js",
     "example:openclaw-scribe-report-v0.1": "node dist/examples/openclaw-scribe-report-v0.1/verify-example.js",
+    "example:decision-record-v0.2-draft": "node dist/examples/decision-record-v0.2-draft/verify-example.js",
     "reset:demo": "node scripts/reset-demo.mjs",
     "reset:all": "node scripts/reset-all.mjs",
     "demo:clean": "npm run reset:demo && npm run build && npm run example:mcp-real && npm run chain"

@@ -1,0 +1,93 @@
+{
+  "claim": {
+    "receipt_version": "0.2",
+    "receipt_role": "server_attested",
+    "event_id": "evt_decision_export_001",
+    "timestamp": "2026-09-09T20:05:00.000Z",
+    "action_type": "governance.decision_evidence_exported",
+    "status": "exported",
+    "decision_record": {
+      "decision_id": "decision_payments_042",
+      "subject": {
+        "action_ref": "tool-call:payments.transfer:request-7391",
+        "action_type": "payments.transfer"
+      },
+      "mode": "shadow",
+      "evidence": {
+        "bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
+        "source_ref": "arbiter://synthetic/decisions/decision_payments_042",
+        "rule_ref": "payment-release-policy@2026-09-01"
+      },
+      "opened": {
+        "timestamp": "2026-09-09T20:00:00.000Z",
+        "options": ["allow", "deny"],
+        "scope": {
+          "operation": "payments.transfer",
+          "environment": "production",
+          "amount_band": "10000-49999-usd"
+        },
+        "resolution_rule": "simple_majority"
+      },
+      "inputs": [
+        {
+          "type": "vote",
+          "decision_id": "decision_payments_042",
+          "evidence_bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
+          "source": "risk-reviewer-a",
+          "selection": "deny",
+          "confidence": 0.98,
+          "round": 1,
+          "timestamp": "2026-09-09T20:01:10.000Z"
+        },
+        {
+          "type": "vote",
+          "decision_id": "decision_payments_042",
+          "evidence_bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
+          "source": "fraud-reviewer-b",
+          "selection": "deny",
+          "confidence": 0.87,
+          "round": 1,
+          "timestamp": "2026-09-09T20:01:24.000Z"
+        },
+        {
+          "type": "vote",
+          "decision_id": "decision_payments_042",
+          "evidence_bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
+          "source": "operations-reviewer-c",
+          "selection": "allow",
+          "confidence": 0.72,
+          "round": 1,
+          "timestamp": "2026-09-09T20:01:43.000Z"
+        }
+      ],
+      "resolution": {
+        "verdict": "deny",
+        "chosen_option": "deny",
+        "reason": "Two of three inputs found the transfer evidence insufficient for release under the referenced rule.",
+        "tally": { "allow": 1, "deny": 2 },
+        "dissent": [
+          {
+            "source": "operations-reviewer-c",
+            "selection": "allow",
+            "reason": "Existing beneficiary history reduced operational concern."
+          }
+        ],
+        "timestamp": "2026-09-09T20:02:00.000Z"
+      },
+      "adjudication": {
+        "decision_id": "decision_payments_042",
+        "outcome": "released",
+        "path": "shadow_observation",
+        "reason": "Shadow-mode verdicts are recorded but do not block the held call.",
+        "timestamp": "2026-09-09T20:02:01.000Z"
+      },
+      "execution_observation": {
+        "state": "not_observed",
+        "scope": "exporter_observed_hold_release_only",
+        "timestamp": "2026-09-09T20:02:01.000Z"
+      }
+    }
+  },
+  "signature": "pbRz9dv1YkeerH44upt4o/EYQHa7C00AIZN9XLc1+rUqTZvzcJSLsbxmOaMmy73Qw5hYy3uy1eCUBhgaYwH8BA==",
+  "public_key_id": "sha256:a3fc65e43c26d006f58b2efabd7ad3c4cd940fe6bd903ed2fdb38d1714b2319e"
+}
