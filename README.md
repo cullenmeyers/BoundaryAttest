@@ -6,6 +6,8 @@ Signed boundary records for agent actions.
 
 Normal logs and OpenTelemetry are usually enough for internal debugging and monitoring. BoundaryAttest is for cases where a portable attestation may need to be checked later: multi-agent workflows, org-to-org workflows, delegated agents, business record changes, document publishing, commerce/dispute scenarios, and high-value or hard-to-reverse actions.
 
+BoundaryAttest is intended for selected cross-boundary evidence, not for signing every agent or tool event. Use the [use and non-use guide](docs/when-to-use-boundaryattest.md) to decide whether a portable signed object materially improves trust at a boundary.
+
 When an agent calls a tool, BoundaryAttest can:
 
 - hash the input

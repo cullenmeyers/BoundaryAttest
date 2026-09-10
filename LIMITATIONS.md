@@ -4,6 +4,8 @@ BoundaryAttest is experimental local-first software.
 
 BoundaryAttest receipts are tamper-evident local records, not a security guarantee.
 
+See [When to use BoundaryAttest](docs/when-to-use-boundaryattest.md) for the fuller selection test and assurance hierarchy.
+
 It is not compliance software and should not be used as a legal, regulatory, or compliance-grade audit system.
 
 A valid signature shows that the corresponding key signed the included claim. It does not prove:
@@ -17,6 +19,12 @@ A valid signature shows that the corresponding key signed the included claim. It
 - who bears legal responsibility
 
 It does not prove that an agent made a correct decision. It also does not prove that an external tool actually performed the claimed action.
+
+`server_attested` means that the expected runtime/operator key signed the claim. It does not establish signer independence, secure key custody, an uncompromised runtime, or objective truth. Expected-key distribution and signer trust remain relying-party responsibilities.
+
+`client_observed` covers only what a cooperating participating client signs that it observed. It does not discover unwrapped or shadow MCP activity, prove all calls passed through that client, or solve non-cooperating client behavior.
+
+One receipt proves only its own signed claim. It does not prove completeness, absence of omitted or deleted events, a complete session, or authoritative ordering across unrelated receipts.
 
 Receipt hashes let the same input/output be matched later; they do not establish that the action was correct or useful.
 
@@ -46,6 +54,8 @@ Multi-process/distributed chain consistency is not solved yet.
 
 Production systems with multiple writers should use a durable coordinated sink.
 
+The simple linear `previous_receipt_hash` model assumes coordinated sequential ordering. It is not a general full-history solution for active/active systems, concurrent writers, independent replicas, or differing allocation and commit order.
+
 BoundaryAttest does not yet support cross-sink or global chain verification.
 
 No vendor integrations are included yet.
@@ -53,6 +63,8 @@ No vendor integrations are included yet.
 Console and memory sinks are for demo/testing, not durable audit storage.
 
 `receiptPolicy` is not a permission system and does not approve or block actions.
+
+Signature verification does not prove that a policy or authorization decision was correct, that execution occurred, or that the result was correct.
 
 BoundaryAttest works where a developer can wrap or intercept the tool-call boundary.
 
@@ -105,6 +117,8 @@ BoundaryAttest does not verify upstream proposal, ticket, approval, workflow, or
 `lineage_ref` and `lineage_hash` are only as trustworthy as the host system that supplied them.
 
 No governance engine, DAO integration, blockchain anchoring, or approval system is implemented.
+
+Where a durable authoritative source already exposes equivalent evidence, or a receiver can fetch authoritative inputs and deterministically recompute the result, an additional receipt may be unnecessary.
 
 Request signing is not implemented yet.
 
