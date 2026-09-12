@@ -27,25 +27,41 @@ The division of responsibility matters: BoundaryAttest proves expected-key posse
 
 The integration remains experimental. It does not establish runtime integrity, independent truth, production-grade key custody, universal Causly support, partnership, endorsement, or production deployment.
 
-## Pattern 4: Python-native arbitrary digest signing
+## Pattern 4: PriorSeal context-commitment composition
+
+[PriorSeal Issue #2](https://github.com/imokokok/PriorSeal/issues/2) produced an independently implemented paired fixture at commit [`3c70ea54975de3fc71c122b9ea9bf512f65f7f58`](https://github.com/imokokok/PriorSeal/tree/3c70ea54975de3fc71c122b9ea9bf512f65f7f58/examples/boundaryattest-paired-v0.2). The fixture binds a BoundaryAttest Interop v0.2 decision-record claim to a separate PriorSeal exact-call authorization and execution receipt without making either system authoritative for the other's semantics.
+
+The composition verifies each side independently under its own expected trust root, then checks a namespaced commitment over `SHA-256(RFC8785-JCS(claim))`. The namespace `boundaryattest.jcs-claim.v0.2` is explicitly provisional and fixture-specific, not a normative BoundaryAttest namespace.
+
+The fixture also keeps composition policy outside BoundaryAttest core:
+
+- `claim.timestamp` is used for export-age and clock-skew policy;
+- `decision_record.resolution.timestamp` is checked separately for underlying decision freshness;
+- exact signed-export replay is keyed by `(public_key_id, event_id)` rather than treating `event_id` as a BoundaryAttest-wide replay invariant;
+- optional one-time `decision_id` consumption is modeled as a separate domain policy; and
+- `subject.action_ref` plus action type provide the narrow cross-system correlation contract.
+
+Its negative vectors fail closed for exact-export replay, wrong committed digest, stale export, stale underlying decision, optional decision replay, claim tampering, and a wrong independently supplied BoundaryAttest key. This is a synthetic interoperability fixture, not a production integration, partnership, endorsement, shared standard, or cross-domain truth claim.
+
+## Pattern 5: Python-native arbitrary digest signing
 
 The [Python interop example](../examples/python-interop-v0.1/) signs arbitrary host-provided artifact or action digests plus structured metadata. It emits the strict Interop Profile v0.1 envelope—`claim`, `signature`, and `public_key_id`—and requires Python's `cryptography` package. Its checked-in keys are demo-only, and its documented cross-language canonicalization limits are part of the example's compatibility boundary.
 
-## Pattern 5: benchmark/eval result artifact receipt
+## Pattern 6: benchmark/eval result artifact receipt
 
 The [benchmark/eval design note](benchmark-result-receipt-example.md) and [public-artifact example](../examples/benchmark-result-public-v0.1/) show a receipt binding a benchmark or eval artifact hash and signed metadata. That binding does not establish that the benchmark is correct, fair, representative, or complete.
 
 Where reproducibility requires both views, a producer can record a hash of the exact raw artifact bytes and a separate hash of a documented public canonical artifact. The producer must define which bytes and canonicalization each digest covers; this does not change BoundaryAttest's signed-claim canonicalization.
 
-## Pattern 6: x402 authorization-linked receipt
+## Pattern 7: x402 authorization-linked receipt
 
 The [draft x402 authorization-linked receipt profile](x402-authorization-linked-receipt-v0.1-draft.md) and [synthetic fixtures](../examples/x402-authorization-linked-receipt-v0.1/) show how an optional signed `authorization_ref` can bind a BoundaryAttest action/result receipt to a separate authorization artifact by digest. Authorization identity, cap, purpose, expiry, validity, and payment settlement remain external checks; the pattern does not change the Interop v0.1 schema or verifier.
 
-## Pattern 7: exported gate decision and asynchronous run result
+## Pattern 8: exported gate decision and asynchronous run result
 
 The [exported gate decision and run result design note](exported-gate-and-run-result-profile-v0.1-draft.md) narrows receipts to two trust-boundary seams: exported gate decisions and asynchronous result handoffs. Its signed claims carry an explicit draft profile version and self-describing digest bindings; an exported gate decision binds both the request and exact response body. It distinguishes portable public-key receipts from shared-secret webhook delivery signatures and explicitly excludes same-boundary gate calls, RBAC restatements, and generic high-volume tool-call receipts. It is a design note only and does not change the Interop v0.1 schema.
 
-## Pattern 8: Pragma bundle export receipt
+## Pattern 9: Pragma bundle export receipt
 
 The [Pragma bundle export receipt draft](pragma-bundle-export-receipt-v0.1-draft.md) and [synthetic fixture](../examples/pragma-bundle-export-receipt-v0.1/) show an external signed claim over Pragma-computed bundle, project, root, and export metadata values. Pragma remains responsible for validating the `.pragma` bundle's internal structure and content; BoundaryAttest verifies only the surrounding claim, and a relying verifier compares its fields with values from Pragma's normal verification path. This docs/examples-only pattern is not an integration, endorsement, or statement of Pragma support.
 
