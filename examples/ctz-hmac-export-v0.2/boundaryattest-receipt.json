@@ -1,0 +1,37 @@
+{
+  "claim": {
+    "receipt_version": "0.2",
+    "receipt_role": "server_attested",
+    "event_id": "ctz-export-task-synthetic-security-report-001",
+    "timestamp": "2026-03-17T12:00:01.000Z",
+    "action_type": "ctz.evidence_exported",
+    "status": "exported",
+    "ctz_export": {
+      "source": {
+        "repository": "vedchaos/chaos-type-zero",
+        "commit": "531d1796b312318f59bf241b8183718a3fcd2839",
+        "path": "bridge_core/receipts.py"
+      },
+      "native_receipt": {
+        "receipt_id": "rcpt_1773748800_7a11c0ffee42",
+        "hmac_key_id": "key-109ff0d41e0b",
+        "filename": "ctz-native-receipt.json",
+        "media_type": "application/json",
+        "representation": "raw_bytes",
+        "sha256": "980b40d5722c05ba81ddd30e8563e2fe491c76f3738077f0a7b7a69b673e12ac"
+      },
+      "artifact": {
+        "filename": "report.md",
+        "media_type": "text/markdown",
+        "representation": "raw_bytes",
+        "sha256": "508055ea71b8ab5f8e33abdf592d477d0576b37b5a93de0b95e16a5eebb2d5c0"
+      },
+      "adapter": {
+        "identity": "boundaryattest-synthetic-ctz-export-adapter",
+        "scope": "attest frozen CTZ receipt and exported artifact bytes only"
+      }
+    }
+  },
+  "signature": "JPSejPGglFegXnGnqKGrT8scyxzztq41DG8Az1NOlMi8eh6Dqpy2jhLPSIxP1mTnWaZzndxa+xIhm7V3ve8VDw==",
+  "public_key_id": "sha256:a3fc65e43c26d006f58b2efabd7ad3c4cd940fe6bd903ed2fdb38d1714b2319e"
+}

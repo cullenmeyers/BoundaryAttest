@@ -1,0 +1,27 @@
+{
+  "version": "ctz-receipt-v1.0",
+  "receipt": {
+    "receipt_id": "rcpt_1773748800_7a11c0ffee42",
+    "timestamp": "2026-03-17T12:00:00+00:00",
+    "task_id": "task-synthetic-security-report-001",
+    "task_description": "Export a synthetic dependency review report",
+    "handoff": {
+      "from_agent": "PlannerAgent",
+      "to_agent": "ExecutorAgent"
+    },
+    "action": {
+      "action_type": "consequential_tool_call",
+      "tool_name": "report_writer.export_markdown"
+    },
+    "provenance": {
+      "input_hash": "29c535e16e7715f04adafcef5be4ce3d8bb955f9f00a761fdcfde65c6750c1ba",
+      "result_hash": "07f483cc280283d314ebcffe3ae2f0602c3c6e31e30bd38bcfc28c09d775b6fb"
+    },
+    "status": "exported",
+    "signer": {
+      "key_id": "key-109ff0d41e0b",
+      "algorithm": "HMAC-SHA256"
+    }
+  },
+  "signature": "0aad02d8085c6b53c8ddb1ab17adfeee44c5854c0fa3f05a3e9d00e268795638"
+}

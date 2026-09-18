@@ -32,6 +32,8 @@
     "example:proof-kit": "node dist/examples/proof-kit/verify-proof-kit.js",
     "example:interop-v0.1": "node dist/examples/interop-v0.1/verify-vectors.js",
     "example:interop-v0.2": "node dist/examples/interop-v0.2/verify-vectors.js",
+    "example:ctz-hmac-export-v0.2": "node dist/examples/ctz-hmac-export-v0.2/verify-native.js && node dist/examples/ctz-hmac-export-v0.2/verify.js",
+    "generate:ctz-hmac-export-v0.2": "node dist/examples/ctz-hmac-export-v0.2/generate.js",
     "example:python-interop-v0.2": "python3 examples/python-interop-v0.2/verify_vectors.py",
     "example:interop-v0.2:js-to-python": "node dist/examples/interop-v0.2/sign-file.js examples/interop-v0.2/test-vectors/sample-claim.json examples/interop-v0.2/test-vectors/test-only-private-key.pem /tmp/boundaryattest-js-v0.2.json && python3 examples/python-interop-v0.2/verify_receipt.py /tmp/boundaryattest-js-v0.2.json examples/interop-v0.2/test-vectors/public-key.pem",
     "example:interop-v0.2:python-to-js": "python3 examples/python-interop-v0.2/sign_receipt.py examples/interop-v0.2/test-vectors/sample-claim.json examples/interop-v0.2/test-vectors/test-only-private-key.pem --output /tmp/boundaryattest-python-v0.2.json && node dist/examples/interop-v0.2/verify-file.js /tmp/boundaryattest-python-v0.2.json examples/interop-v0.2/test-vectors/public-key.pem",
