@@ -13,8 +13,9 @@
         "action_type": "payments.transfer"
       },
       "mode": "shadow",
+      "control_effect": "not_blocked",
       "evidence": {
-        "bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
+        "bundle_digest": "sha256:9b1b72ca3e3dc55171abb41f6a144adf88304a8fb4f00932653e333ebb943458",
         "source_ref": "arbiter://synthetic/decisions/decision_payments_042",
         "rule_ref": "payment-release-policy@2026-09-01"
       },
@@ -32,31 +33,22 @@
         {
           "type": "vote",
           "decision_id": "decision_payments_042",
-          "evidence_bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
           "source": "risk-reviewer-a",
           "selection": "deny",
-          "confidence": 0.98,
-          "round": 1,
           "timestamp": "2026-09-09T20:01:10.000Z"
         },
         {
           "type": "vote",
           "decision_id": "decision_payments_042",
-          "evidence_bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
           "source": "fraud-reviewer-b",
           "selection": "deny",
-          "confidence": 0.87,
-          "round": 1,
           "timestamp": "2026-09-09T20:01:24.000Z"
         },
         {
           "type": "vote",
           "decision_id": "decision_payments_042",
-          "evidence_bundle_digest": "sha256:7b8ed2a9bc7d4ba78192bcaae53fed8dd2ff68c8c74a5cefbdd086f6df2037da",
           "source": "operations-reviewer-c",
           "selection": "allow",
-          "confidence": 0.72,
-          "round": 1,
           "timestamp": "2026-09-09T20:01:43.000Z"
         }
       ],
@@ -83,11 +75,11 @@
       },
       "execution_observation": {
         "state": "not_observed",
-        "scope": "exporter_observed_hold_release_only",
+        "scope": "hold_released_downstream_unobserved",
         "timestamp": "2026-09-09T20:02:01.000Z"
       }
     }
   },
-  "signature": "pbRz9dv1YkeerH44upt4o/EYQHa7C00AIZN9XLc1+rUqTZvzcJSLsbxmOaMmy73Qw5hYy3uy1eCUBhgaYwH8BA==",
+  "signature": "y4upqfYbzrCt5QxKQZoHuyQ8UOj4Swa+PDJYoYVwgmPpQ1e7Lts/e0oNwTXaSPLQO29gm7riCs2rjasr77mQDQ==",
   "public_key_id": "sha256:a3fc65e43c26d006f58b2efabd7ad3c4cd940fe6bd903ed2fdb38d1714b2319e"
 }

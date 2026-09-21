@@ -1,0 +1,10 @@
+{
+  "subject": {
+    "action_ref": "tool-call:payments.transfer:request-7391",
+    "action_type": "payments.transfer"
+  },
+  "evidence_metadata": {
+    "amount_band": "10000-49999-usd",
+    "environment": "production"
+  }
+}
