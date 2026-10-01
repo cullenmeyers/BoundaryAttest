@@ -65,6 +65,12 @@ The [exported gate decision and run result design note](exported-gate-and-run-re
 
 The [Pragma bundle export receipt draft](pragma-bundle-export-receipt-v0.1-draft.md) and [synthetic fixture](../examples/pragma-bundle-export-receipt-v0.1/) show an external signed claim over Pragma-computed bundle, project, root, and export metadata values. Pragma remains responsible for validating the `.pragma` bundle's internal structure and content; BoundaryAttest verifies only the surrounding claim, and a relying verifier compares its fields with values from Pragma's normal verification path. This docs/examples-only pattern is not an integration, endorsement, or statement of Pragma support.
 
+## Pattern 10: SLICC transcript-export handoff
+
+The [SLICC transcript-export handoff fixture](../examples/slicc-transcript-export-v0.2/) is a BoundaryAttest-authored synthetic Interop Profile v0.2 experiment over the exact bytes of a documented SLICC transcript ZIP shape. It was created after the SLICC maintainer agreed the synthetic experiment sounded useful for review in [`ai-ecoverse/slicc#3603`](https://github.com/ai-ecoverse/slicc/issues/3603). It makes no SLICC code changes and is not adoption, endorsement, partnership, production support, or a claim that an actual SLICC runtime produced the fixture.
+
+The signed extension binds the ZIP's raw-byte SHA-256 and length to its export ID, synthetic session reference, documented format/schema version, pinned upstream source, and explicit synthetic approval context. SLICC's native approval and transfer semantics remain authoritative. Because the pinned transcript format does not expose a durable portable approval receipt/reference at this boundary, the fixture records that reference as unavailable rather than inventing one.
+
 ## What these patterns have in common
 
 - A small signed claim crosses a system or trust boundary.

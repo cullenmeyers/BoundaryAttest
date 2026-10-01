@@ -1,0 +1,43 @@
+{
+  "claim": {
+    "receipt_version": "0.2",
+    "receipt_role": "server_attested",
+    "event_id": "slicc-transcript-export-handoff-synthetic-7a11c0ff",
+    "timestamp": "2026-09-30T12:00:01.000Z",
+    "action_type": "slicc.transcript_export_handoff",
+    "status": "exported",
+    "slicc_export": {
+      "source": {
+        "repository": "ai-ecoverse/slicc",
+        "commit": "59672ceaad7701cd56ec32b805bdd0b9d15ac1c4",
+        "transcript_export_doc": "docs/transcript-export.md",
+        "approvals_doc": "docs/approvals.md"
+      },
+      "artifact": {
+        "filename": "slicc-2026-09-30-boundaryattest-fixture-7a11c0ff.zip",
+        "media_type": "application/zip",
+        "representation": "raw_bytes",
+        "byte_length": 1556,
+        "sha256": "f9ec099e9cdad44c11d12ba1205ad2a62b163481c7343969bf7a56c4bb665ab8"
+      },
+      "export_context": {
+        "export_id": "7a11c0ff-5e4d-4c3b-9a28-000000000001",
+        "session_ref": "synthetic-session-boundaryattest-001",
+        "format": "slicc-transcript",
+        "schema_version": 1
+      },
+      "approval_context": {
+        "gate_kind": "export",
+        "scenario_decision": "allow_once",
+        "portable_native_approval_reference": "unavailable",
+        "provenance": "synthetic_fixture_context"
+      },
+      "adapter": {
+        "identity": "boundaryattest-synthetic-slicc-export-adapter",
+        "scope": "attest exact synthetic transcript ZIP bytes and selected export context only"
+      }
+    }
+  },
+  "signature": "QQKajC5LSeFlP6KF6yFisHyz9lavPrbczvJpDMQQaiiHerHTJ46GQQcQ/5D/ag6sSxCNBX16blcoLRYEAQBFBg==",
+  "public_key_id": "sha256:684018e41757913b2321566dd5e7cc2f6ee8e0bfbfe733520af1ce3f9b184b64"
+}
