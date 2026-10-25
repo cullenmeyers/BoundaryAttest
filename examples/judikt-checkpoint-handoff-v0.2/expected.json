@@ -1,0 +1,7 @@
+{
+  "judikt_native_checkpoint_sha256": "d8a457b810ddae985f6ae5dfd7d96cf4be60f38f3f6aa6460e0b513f5db6ac9f",
+  "judikt_chain_id": "judikt-synthetic-chain-001",
+  "judikt_seq": 128,
+  "judikt_head_hash": "2f0597d6637822ba58d03e1e865034384853f382a1d7adeaf15a8ec209901a19",
+  "boundaryattest_public_key_id": "sha256:70390e714359ba8a452b38fc9cdc79004fe7d473ffe5a7b55e99117128792cc9"
+}

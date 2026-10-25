@@ -1,0 +1,34 @@
+{
+  "claim": {
+    "receipt_version": "0.2",
+    "receipt_role": "server_attested",
+    "event_id": "judikt-checkpoint-handoff-judikt-synthetic-chain-001-128",
+    "timestamp": "2026-10-25T16:30:01.000Z",
+    "action_type": "judikt.audit_checkpoint_handoff",
+    "status": "exported",
+    "judikt_checkpoint": {
+      "source": {
+        "repository": "gaurav-gs7/Judikt",
+        "commit": "16f6b911ff550d3213605e5e91a2289e0352fb5c",
+        "audit_path": "src/judikt/audit.py",
+        "cli_path": "src/judikt/cli.py"
+      },
+      "checkpoint": {
+        "filename": "judikt-native-checkpoint.json",
+        "media_type": "application/json",
+        "representation": "raw_bytes",
+        "sha256": "d8a457b810ddae985f6ae5dfd7d96cf4be60f38f3f6aa6460e0b513f5db6ac9f",
+        "chain_id": "judikt-synthetic-chain-001",
+        "seq": 128,
+        "head_hash": "2f0597d6637822ba58d03e1e865034384853f382a1d7adeaf15a8ec209901a19",
+        "native_signature_algorithm": "HMAC-SHA256"
+      },
+      "adapter": {
+        "identity": "boundaryattest-synthetic-judikt-checkpoint-export-adapter",
+        "scope": "attest exact exported Judikt checkpoint bytes and correlate checkpoint metadata only"
+      }
+    }
+  },
+  "signature": "9JodPLoo3FLF6zD4OSlL74KeOt/K4G8nqPLDMqdFkXLCUYbhsstC5VNKi1HzZ67fV4R2sD0VCPyJCLujhmDhCw==",
+  "public_key_id": "sha256:70390e714359ba8a452b38fc9cdc79004fe7d473ffe5a7b55e99117128792cc9"
+}

@@ -71,6 +71,14 @@ The [SLICC transcript-export handoff fixture](../examples/slicc-transcript-expor
 
 The signed extension binds the ZIP's raw-byte SHA-256 and length to its export ID, synthetic session reference, documented format/schema version, pinned upstream source, and explicit synthetic approval context. SLICC's native approval and transfer semantics remain authoritative. Because the pinned transcript format does not expose a durable portable approval receipt/reference at this boundary, the fixture records that reference as unavailable rather than inventing one.
 
+## Pattern 11: Judikt audit checkpoint handoff
+
+The [Judikt checkpoint handoff fixture](../examples/judikt-checkpoint-handoff-v0.2/) is a BoundaryAttest-authored synthetic Interop Profile v0.2 experiment over the exact bytes of Judikt's exported checkpoint JSON shape. It was created after the Judikt maintainer identified the checkpoint—not individual audit events—as the useful receipt seam and invited an example in [`gaurav-gs7/Judikt#2`](https://github.com/gaurav-gs7/Judikt/issues/2#issuecomment-6396544950).
+
+The fixture reproduces the pinned Judikt HMAC checkpoint signing and file-export semantics with a public fixture-only secret, while the separate external verifier deliberately receives no Judikt HMAC secret. A BoundaryAttest export-adapter claim binds the exact checkpoint-file digest plus `chain_id`, `seq`, and `head_hash` to an independently expected Ed25519 signer. Judikt remains authoritative for the audit chain and native checkpoint semantics; the fixture does not independently validate the underlying audit history, completeness, runtime integrity, or pre-export state.
+
+The maintainer's preferred long-term direction is native asymmetric signing of exported Judikt checkpoints with operator-controlled key custody. If that becomes available, an extra BoundaryAttest wrapper may be redundant for simple signature portability; this fixture demonstrates composition with the current shared-secret boundary rather than a requirement that Judikt adopt BoundaryAttest.
+
 ## What these patterns have in common
 
 - A small signed claim crosses a system or trust boundary.
