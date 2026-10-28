@@ -79,9 +79,21 @@ The fixture reproduces the pinned Judikt HMAC checkpoint signing and file-export
 
 The maintainer's preferred long-term direction is native asymmetric signing of exported Judikt checkpoints with operator-controlled key custody. If that becomes available, an extra BoundaryAttest wrapper may be redundant for simple signature portability; this fixture demonstrates composition with the current shared-secret boundary rather than a requirement that Judikt adopt BoundaryAttest.
 
+
+## Pattern 12: AgentLock native authorization receipt and audit-export handoff
+
+[AgentLock Issue #3](https://github.com/webpro255/agentlock/issues/3#issuecomment-6456860762) produced a maintainer-validated boundary that is useful precisely because AgentLock already has native asymmetric evidence. AgentLock's Ed25519 authorization receipt is the complete portable claim for the authorization decision; an outer BoundaryAttest receipt would add another signer without adding a distinct claim. The correct composition at that boundary is therefore to verify the native AgentLock receipt directly and leave it authoritative.
+
+AgentLock deliberately keeps post-authorization audit evidence separate. Gate-owned execution through `execute()` is recorded as first-hand observation with `reported_by="gate"`, while externally performed execution reported through `confirm_execution` is labeled `reported_by="caller"`. Neither audit path is currently signed, and the distinction is intentional: a gate-observed callable return is not proof that the intended real-world effect occurred, and a caller report must not be upgraded into a gate attestation.
+
+If an operator exports selected AgentLock audit evidence across a trust boundary, a BoundaryAttest-style commitment can fit at that separate handoff: freeze the exact exported bytes, have the expected exporter sign only that artifact commitment, and let the recipient verify the exporter independently. That claim establishes signer commitment to the exact exported bundle and post-signing integrity only. It does not prove execution, real-world outcome, audit completeness, correctness of the authorization decision, or that caller-reported evidence is gate-observed.
+
+This pattern establishes a general non-wrapping rule: when a source system already provides appropriate native asymmetric evidence for the portable claim, BoundaryAttest should defer to it. BoundaryAttest belongs only at a distinct unsigned handoff boundary if that boundary carries a separate claim.
+
 ## What these patterns have in common
 
 - A small signed claim crosses a system or trust boundary.
+- When native asymmetric evidence already covers that portable claim, verify it directly rather than wrapping it with a second BoundaryAttest signature; use BoundaryAttest only for a distinct handoff claim if one exists.
 - The expected public key comes from trusted verifier configuration, not from an untrusted receipt alone.
 - Artifact consumers recompute digests over the exact bytes they will use.
 - Domain semantics and accept/reject policy stay with the adapter or relying party.
