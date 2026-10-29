@@ -30,6 +30,38 @@ The proof kit uses demo-only signer trust. Receipts prove signature and content 
 
 External adapters should target the experimental [BoundaryAttest Interop Profile v0.2](docs/interop-profile-v0.2.md), which uses the language-neutral RFC 8785 JSON Canonicalization Scheme. Its [adapter guide](docs/interop-adapter-guide-v0.2.md), [JSON Schema](docs/schemas/interop-receipt-v0.2.schema.json), [verification limits](docs/interop-verification-limits-v0.2.md), and shared JavaScript/Python vectors define the compatibility target.
 
+## Exact-artifact CLI (Interop v0.2)
+
+BoundaryAttest now exposes the v0.2 signing and verification primitives through the public TypeScript API and a minimal exact-artifact CLI. This is the smallest productized path for the handoff pattern validated by external integrations: freeze the final bytes, sign a narrow claim, and verify those same bytes against an independently supplied expected public key.
+
+Generate a dedicated Ed25519 keypair:
+
+```sh
+openssl genpkey -algorithm Ed25519 -out boundaryattest-private.pem
+openssl pkey -in boundaryattest-private.pem -pubout -out boundaryattest-public.pem
+```
+
+Build and attest an artifact:
+
+```sh
+npm install
+npm run build
+npm run attest -- ./evidence.json \
+  --action-type evidence.export \
+  --private-key ./boundaryattest-private.pem \
+  --output ./evidence.receipt.json
+```
+
+Verify the exact delivered bytes with the expected public key obtained through a trusted channel:
+
+```sh
+npm run verify:artifact -- ./evidence.json ./evidence.receipt.json \
+  --public-key ./boundaryattest-public.pem
+```
+
+The package also exposes a `boundaryattest` executable alias for local/link installs. The verifier prints what passed and explicitly states what the receipt does **not** prove. A passing result establishes expected-key match, Ed25519 signature validity over the v0.2 JCS claim, and exact artifact-byte binding. It does not establish truth, completeness, authorization, signer trustworthiness, runtime integrity, or business outcome.
+
+
 [Interop Profile v0.1](docs/interop-profile-v0.1.md) is frozen for legacy verification. It deliberately retains the original `stableJson` and `localeCompare()` behavior, existing signatures, vectors, Python limitations, and verifier failure codes. Canonicalization changed only with the receipt-version bump to `"0.2"`, so already-issued v0.1 signatures are not reinterpreted.
 
 For a concise index of current external implementations, integration examples, and validated receipt patterns, see [External interop patterns](docs/external-interop-patterns.md).
