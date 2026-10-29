@@ -1,10 +1,9 @@
 {
-  "name": "agentreceipt",
+  "name": "boundaryattest",
   "version": "0.1.0",
   "description": "Portable signed attestations for consequential agent actions crossing trust boundaries.",
   "homepage": "https://boundaryattest.com",
   "type": "module",
-  "private": true,
   "license": "MIT",
   "bin": {
     "agentreceipt": "dist/src/index.js",
@@ -58,7 +57,9 @@
     "reset:all": "node scripts/reset-all.mjs",
     "demo:clean": "npm run reset:demo && npm run build && npm run example:mcp-real && npm run chain",
     "attest": "node dist/src/index.js attest",
-    "verify:artifact": "node dist/src/index.js verify-artifact"
+    "verify:artifact": "node dist/src/index.js verify-artifact",
+    "prepack": "npm run build",
+    "check:package": "npm run build && node scripts/check-package.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
@@ -67,5 +68,33 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.4.3"
+  },
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cullenmeyers/BoundaryAttest.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cullenmeyers/BoundaryAttest/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "attestation",
+    "ed25519",
+    "provenance",
+    "verification",
+    "ai-agents",
+    "mcp",
+    "audit",
+    "receipts"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
