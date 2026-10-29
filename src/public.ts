@@ -21,3 +21,20 @@ export type {
   ReceiptPolicy,
   ReceiptRole,
 } from "./receipts.js";
+export {
+  createArtifactAttestationV02,
+  createInteropV02Receipt,
+  interopV02PublicKeyId,
+  signInteropV02Claim,
+  verifyArtifactAttestationV02,
+  verifyInteropV02Receipt,
+} from "./interopV02.js";
+export type {
+  ArtifactAttestationOptions,
+  ArtifactAttestationVerificationResult,
+  InteropV02Claim,
+  InteropV02FailureReason,
+  InteropV02Receipt,
+  InteropV02ReceiptRole,
+  InteropV02VerificationResult,
+} from "./interopV02.js";

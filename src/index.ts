@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { latestReceiptHash, sortedReceipts, verifyRetainedChain, verifyStrictChain, type ChainVerificationResult } from "./chain.js";
 import { sha256 } from "./hash.js";
@@ -15,6 +16,7 @@ import {
 import { pruneReceipts } from "./retention.js";
 import { verifyReceipt } from "./signing.js";
 import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH } from "./paths.js";
+import { createArtifactAttestationV02, verifyArtifactAttestationV02, type InteropV02ReceiptRole } from "./interopV02.js";
 
 const AGENT_ID = "agentreceipt-demo-agent";
 
@@ -95,6 +97,94 @@ function commandVerify(receiptPathArg: string | undefined): void {
   console.log(valid ? "Receipt is valid." : "Receipt is NOT valid.");
 }
 
+
+function optionValue(args: string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : undefined;
+}
+
+function commandAttest(args: string[]): void {
+  const artifactArg = args[0];
+  const actionType = optionValue(args, "--action-type");
+  const privateKeyArg = optionValue(args, "--private-key");
+  const outputArg = optionValue(args, "--output");
+  const roleArg = optionValue(args, "--role");
+  const status = optionValue(args, "--status");
+
+  if (!artifactArg || !actionType || !privateKeyArg) {
+    throw new Error(
+      "Usage: boundaryattest attest <artifact> --action-type <type> --private-key <private.pem> " +
+        "[--output <receipt.json>] [--role server_attested|client_observed] [--status <status>]",
+    );
+  }
+
+  if (roleArg && roleArg !== "server_attested" && roleArg !== "client_observed") {
+    throw new Error('--role must be "server_attested" or "client_observed"');
+  }
+
+  const artifactPath = resolve(artifactArg);
+  const privateKeyPath = resolve(privateKeyArg);
+  const outputPath = resolve(outputArg ?? `${artifactArg}.boundaryattest.json`);
+  const artifactBytes = readFileSync(artifactPath);
+  const privateKeyPem = readFileSync(privateKeyPath, "utf8");
+  const receipt = createArtifactAttestationV02(artifactBytes, privateKeyPem, {
+    actionType,
+    receiptRole: roleArg as InteropV02ReceiptRole | undefined,
+    status,
+  });
+
+  writeFileSync(outputPath, `${JSON.stringify(receipt, null, 2)}\n`, "utf8");
+
+  const artifactClaim = receipt.claim.artifact as { sha256: string; bytes: number };
+  console.log("BoundaryAttest v0.2 artifact receipt created.");
+  console.log(`Artifact: ${artifactPath}`);
+  console.log(`Receipt:  ${outputPath}`);
+  console.log(`Action:   ${receipt.claim.action_type}`);
+  console.log(`Role:     ${receipt.claim.receipt_role}`);
+  console.log(`SHA-256:  ${artifactClaim.sha256}`);
+  console.log(`Bytes:    ${artifactClaim.bytes}`);
+  console.log(`Key ID:   ${receipt.public_key_id}`);
+}
+
+function commandVerifyArtifact(args: string[]): void {
+  const artifactArg = args[0];
+  const receiptArg = args[1];
+  const publicKeyArg = optionValue(args, "--public-key");
+
+  if (!artifactArg || !receiptArg || !publicKeyArg) {
+    throw new Error(
+      "Usage: boundaryattest verify-artifact <artifact> <receipt.json> --public-key <expected-public.pem>",
+    );
+  }
+
+  const artifactPath = resolve(artifactArg);
+  const receiptPath = resolve(receiptArg);
+  const publicKeyPath = resolve(publicKeyArg);
+  const result = verifyArtifactAttestationV02(
+    readFileSync(artifactPath),
+    readFileSync(receiptPath, "utf8"),
+    readFileSync(publicKeyPath, "utf8"),
+  );
+
+  if (!result.ok) {
+    console.log(`FAIL: ${result.reason}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log("PASS: BoundaryAttest v0.2 artifact receipt verified.");
+  console.log(`Action:    ${result.actionType}`);
+  console.log(`Role:      ${result.receiptRole}`);
+  console.log(`Event ID:  ${result.eventId}`);
+  console.log(`SHA-256:   ${result.sha256}`);
+  console.log(`Bytes:     ${result.bytes}`);
+  console.log(`Key ID:    ${result.publicKeyId}`);
+  console.log("Verified: expected-key match, Ed25519 claim signature, and exact artifact bytes.");
+  console.log(
+    "Not proven: truth, completeness, authorization, signer trustworthiness, runtime integrity, or business outcome.",
+  );
+}
+
 function printChainResult(result: ChainVerificationResult): void {
   result.items.forEach((item, index) => {
     console.log(
@@ -161,10 +251,16 @@ function commandPrune(): void {
 }
 
 function main(): void {
-  const [command, receiptPath] = process.argv.slice(2);
+  const [command, ...args] = process.argv.slice(2);
 
   try {
     switch (command) {
+      case "attest":
+        commandAttest(args);
+        break;
+      case "verify-artifact":
+        commandVerifyArtifact(args);
+        break;
       case "setup":
         commandSetup();
         break;
@@ -172,7 +268,7 @@ function main(): void {
         commandDemo();
         break;
       case "verify":
-        commandVerify(receiptPath);
+        commandVerify(args[0]);
         break;
       case "chain":
         commandChain();
@@ -184,8 +280,15 @@ function main(): void {
         commandPrune();
         break;
       default:
-        console.log("BoundaryAttest local CLI");
-        console.log("Commands:");
+        console.log("BoundaryAttest CLI");
+        console.log("Interop v0.2 artifact commands:");
+        console.log(
+          "  boundaryattest attest <artifact> --action-type <type> --private-key <private.pem> [--output <receipt.json>]",
+        );
+        console.log(
+          "  boundaryattest verify-artifact <artifact> <receipt.json> --public-key <expected-public.pem>",
+        );
+        console.log("Legacy/local commands:");
         console.log("  npm run setup");
         console.log("  npm run demo");
         console.log("  npm run verify -- <receiptPath>");
