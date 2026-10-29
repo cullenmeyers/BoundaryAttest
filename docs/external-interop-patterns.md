@@ -90,12 +90,26 @@ If an operator exports selected AgentLock audit evidence across a trust boundary
 
 This pattern establishes a general non-wrapping rule: when a source system already provides appropriate native asymmetric evidence for the portable claim, BoundaryAttest should defer to it. BoundaryAttest belongs only at a distinct unsigned handoff boundary if that boundary carries a separate claim.
 
+
+## Pattern 13: TargetDash account-brief evidence handoff
+
+[TargetDash Issue #36](https://github.com/chzchzchzchz/AI-CRM/issues/36#issuecomment-6461318675) produced a maintainer-validated handoff boundary that progressed to an upstream-adopted implementation. The maintainer invited a BoundaryAttest integration for cross-boundary CRM intelligence evidence, and the resulting [PR #92](https://github.com/chzchzchzchz/AI-CRM/pull/92) was incorporated into upstream `main` as commit [`63fc14eecc945239c95c5962f5bd2e337b7e3bcf`](https://github.com/chzchzchzchz/AI-CRM/commit/63fc14eecc945239c95c5962f5bd2e337b7e3bcf). The maintainer then closed the issue with the explicit note that the BoundaryAttest integration provides signed receipts for CRM intelligence evidence handoffs.
+
+The integration leaves normal `intel.accountBrief` behavior unchanged and adds an explicit external-by-design `intel.accountBriefHandoff` path. TargetDash first computes and validates its native account brief. Only when a caller deliberately requests a handoff does the adapter freeze the final JSON artifact and create an Interop Profile v0.2 `server_attested` receipt over a narrow export claim.
+
+The signed extension binds the full SHA-256 and byte length of the exact UTF-8 artifact being handed off. TargetDash's native `signalHash` remains TargetDash-owned metadata and is not repurposed as the artifact digest. The claim may also correlate native brief metadata such as account ID, brief version, generation time, rendered-Markdown digest, dropped-claim count, and degraded state, but BoundaryAttest does not become authoritative for those semantics.
+
+The relying party must obtain the expected Ed25519 public key independently. A passing verification establishes only expected-key possession, signed-claim integrity, and binding to the exact exported artifact bytes. It does not prove that CRM source data is complete or correct, that model judgement is correct, that connectors are truthful, that the runtime is uncompromised, or that downstream actions should be taken.
+
+This pattern validates a product-shaped BoundaryAttest seam: a source system already has its own grounding, validation, and native identifiers, but the final evidence artifact becomes independently verifiable when it deliberately leaves that system. The adapter preserves the source system's semantics and adds only the missing portable exporter commitment.
+
 ## What these patterns have in common
 
 - A small signed claim crosses a system or trust boundary.
 - When native asymmetric evidence already covers that portable claim, verify it directly rather than wrapping it with a second BoundaryAttest signature; use BoundaryAttest only for a distinct handoff claim if one exists.
 - The expected public key comes from trusted verifier configuration, not from an untrusted receipt alone.
 - Artifact consumers recompute digests over the exact bytes they will use.
+- Native hashes and identifiers keep their source-system meaning; BoundaryAttest should not repurpose them as artifact digests when a separate exact-byte binding is needed.
 - Domain semantics and accept/reject policy stay with the adapter or relying party.
 - Strict envelope and key-ID rules remain stable even when an external producer uses a nearby experimental shape.
 
