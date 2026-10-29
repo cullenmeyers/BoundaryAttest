@@ -60,6 +60,10 @@ npm run verify:artifact -- ./evidence.json ./evidence.receipt.json \
 ```
 
 The package also exposes a `boundaryattest` executable alias for local/link installs. The verifier prints what passed and explicitly states what the receipt does **not** prove. A passing result establishes expected-key match, Ed25519 signature validity over the v0.2 JCS claim, and exact artifact-byte binding. It does not establish truth, completeness, authorization, signer trustworthiness, runtime integrity, or business outcome.
+### Package status
+
+The repository is publish-ready under the npm package name `boundaryattest`, but publishing is a separate release action. CI packs the exact npm tarball, installs it into an empty project, imports the public v0.2 API, and exercises both CLI aliases before a release is made.
+
 
 
 [Interop Profile v0.1](docs/interop-profile-v0.1.md) is frozen for legacy verification. It deliberately retains the original `stableJson` and `localeCompare()` behavior, existing signatures, vectors, Python limitations, and verifier failure codes. Canonicalization changed only with the receipt-version bump to `"0.2"`, so already-issued v0.1 signatures are not reinterpreted.
@@ -159,7 +163,7 @@ Diagnostic and read-only calls can still be signed if the host system needs that
 
 BoundaryAttest is currently a TypeScript implementation and local-first proof of concept. The long-term value may be a stable receipt envelope and signing input that other systems can emit, store, or verify.
 
-BoundaryAttest was previously called AgentReceipt during early PoC work. The `agentreceipt` package, CLI command, storage directory, and exported API names remain unchanged in this first-pass branding rename for compatibility.
+BoundaryAttest was previously called AgentReceipt during early PoC work. The npm package is now prepared under `boundaryattest`; the `agentreceipt` CLI alias, `.agentreceipt` storage directory, and legacy exported API names remain for compatibility.
 
 This is not a standard yet.
 
@@ -303,7 +307,7 @@ Failed receipts keep the same core shape, set `action_status` to `failed`, set `
 Use `withAgentReceipt` to wrap any async local tool call. It creates keys if needed, hashes the input, runs your function, signs the receipt, chains it to the previous local receipt, and writes the receipt JSON to `./receipts/`.
 
 ```ts
-import { withAgentReceipt } from "agentreceipt";
+import { withAgentReceipt } from "boundaryattest";
 
 const { result, receipt, receiptPath } = await withAgentReceipt({
   agentId: "demo-agent",
@@ -370,7 +374,7 @@ Built-in sinks:
 - `MemoryReceiptSink`: stores receipts in memory for tests/examples. It does not write local receipt files.
 
 ```ts
-import { withAgentReceipt, type ReceiptSink } from "agentreceipt";
+import { withAgentReceipt, type ReceiptSink } from "boundaryattest";
 
 const receiptSink: ReceiptSink = {
   name: "custom-demo",
@@ -423,7 +427,7 @@ After pruning, full historical chain verification with `npm run chain` may fail.
 BoundaryAttest includes a minimal MCP-shaped educational adapter demo. It demonstrates the trust boundary the project cares about: a tool-call shaped request.
 
 ```ts
-import { withMcpReceipt } from "agentreceipt";
+import { withMcpReceipt } from "boundaryattest";
 
 const { mcpResult, receipt, receiptPath } = await withMcpReceipt({
   request: {
