@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { generateKeyPairSync } from "node:crypto";
 import {
   existsSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -89,17 +89,20 @@ console.log("public API smoke passed");
   const apiOutput = run(process.execPath, ["api-probe.mjs"], temp);
   assert.match(apiOutput, /public API smoke passed/);
 
-  const { privateKey, publicKey } = generateKeyPairSync("ed25519", {
-    privateKeyEncoding: { type: "pkcs8", format: "pem" },
-    publicKeyEncoding: { type: "spki", format: "pem" },
-  });
   const artifactPath = join(temp, "artifact.bin");
   const privateKeyPath = join(temp, "private.pem");
   const publicKeyPath = join(temp, "public.pem");
   const receiptPath = join(temp, "artifact.receipt.json");
-  writeFileSync(artifactPath, Buffer.from("cli-installed artifact\\n", "utf8"));
-  writeFileSync(privateKeyPath, privateKey);
-  writeFileSync(publicKeyPath, publicKey);
+
+  const installedPackage = JSON.parse(
+    readFileSync(join(temp, "node_modules", "boundaryattest", "package.json"), "utf8"),
+  );
+  assert.equal(installedPackage.version, "0.1.1");
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(installedPackage, "dependencies"),
+    false,
+    "public package unexpectedly declares runtime dependencies",
+  );
 
   const binDir = join(temp, "node_modules", ".bin");
   const suffix = process.platform === "win32" ? ".cmd" : "";
@@ -107,6 +110,21 @@ console.log("public API smoke passed");
   const legacyBin = join(binDir, `agentreceipt${suffix}`);
   assert.equal(existsSync(boundaryattestBin), true, "boundaryattest CLI alias missing");
   assert.equal(existsSync(legacyBin), true, "agentreceipt compatibility CLI alias missing");
+
+  const keygenOutput = run(
+    boundaryattestBin,
+    ["keygen", "--private-key", privateKeyPath, "--public-key", publicKeyPath],
+    temp,
+  );
+  assert.match(keygenOutput, /BoundaryAttest Ed25519 keypair created/);
+  assert.match(keygenOutput, /Key ID:\s+sha256:[a-f0-9]{64}/);
+  assert.equal(existsSync(privateKeyPath), true, "keygen private key missing");
+  assert.equal(existsSync(publicKeyPath), true, "keygen public key missing");
+  if (process.platform !== "win32") {
+    assert.equal(statSync(privateKeyPath).mode & 0o777, 0o600, "private key mode must be 0600");
+  }
+
+  writeFileSync(artifactPath, Buffer.from("cli-installed artifact\\n", "utf8"));
 
   const attestOutput = run(
     boundaryattestBin,

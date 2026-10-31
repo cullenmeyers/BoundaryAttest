@@ -1,6 +1,6 @@
 {
   "name": "boundaryattest",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Portable signed attestations for consequential agent actions crossing trust boundaries.",
   "homepage": "https://boundaryattest.com",
   "type": "module",
@@ -62,12 +62,10 @@
     "check:package": "npm run build && node scripts/check-package.mjs"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3",
     "@types/node": "^20.12.12",
     "typescript": "^5.4.5"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "zod": "^4.4.3"
   },
   "files": [
     "dist/src",
