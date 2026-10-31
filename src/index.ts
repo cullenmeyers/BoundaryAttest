@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { generateKeyPairSync } from "node:crypto";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { latestReceiptHash, sortedReceipts, verifyRetainedChain, verifyStrictChain, type ChainVerificationResult } from "./chain.js";
 import { sha256 } from "./hash.js";
@@ -16,7 +17,12 @@ import {
 import { pruneReceipts } from "./retention.js";
 import { verifyReceipt } from "./signing.js";
 import { PRIVATE_KEY_PATH, PUBLIC_KEY_PATH } from "./paths.js";
-import { createArtifactAttestationV02, verifyArtifactAttestationV02, type InteropV02ReceiptRole } from "./interopV02.js";
+import {
+  createArtifactAttestationV02,
+  interopV02PublicKeyId,
+  verifyArtifactAttestationV02,
+  type InteropV02ReceiptRole,
+} from "./interopV02.js";
 
 const AGENT_ID = "agentreceipt-demo-agent";
 
@@ -101,6 +107,43 @@ function commandVerify(receiptPathArg: string | undefined): void {
 function optionValue(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function commandKeygen(args: string[]): void {
+  const privateKeyPath = resolve(optionValue(args, "--private-key") ?? "boundaryattest-private.pem");
+  const publicKeyPath = resolve(optionValue(args, "--public-key") ?? "boundaryattest-public.pem");
+
+  if (privateKeyPath === publicKeyPath) {
+    throw new Error("--private-key and --public-key must point to different files");
+  }
+  if (existsSync(privateKeyPath) || existsSync(publicKeyPath)) {
+    throw new Error(
+      "Refusing to overwrite an existing key file. Choose new paths or remove the existing files intentionally.",
+    );
+  }
+
+  const { privateKey, publicKey } = generateKeyPairSync("ed25519", {
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
+    publicKeyEncoding: { type: "spki", format: "pem" },
+  });
+
+  let privateWritten = false;
+  try {
+    writeFileSync(privateKeyPath, privateKey, { encoding: "utf8", mode: 0o600, flag: "wx" });
+    privateWritten = true;
+    writeFileSync(publicKeyPath, publicKey, { encoding: "utf8", flag: "wx" });
+  } catch (error) {
+    if (privateWritten && !existsSync(publicKeyPath)) {
+      unlinkSync(privateKeyPath);
+    }
+    throw error;
+  }
+
+  console.log("BoundaryAttest Ed25519 keypair created.");
+  console.log(`Private key: ${privateKeyPath}`);
+  console.log(`Public key:  ${publicKeyPath}`);
+  console.log(`Key ID:      ${interopV02PublicKeyId(publicKey)}`);
+  console.log("Keep the private key secret; distribute the public key through an independently trusted channel.");
 }
 
 function commandAttest(args: string[]): void {
@@ -255,6 +298,9 @@ function main(): void {
 
   try {
     switch (command) {
+      case "keygen":
+        commandKeygen(args);
+        break;
       case "attest":
         commandAttest(args);
         break;
@@ -282,6 +328,9 @@ function main(): void {
       default:
         console.log("BoundaryAttest CLI");
         console.log("Interop v0.2 artifact commands:");
+        console.log(
+          "  boundaryattest keygen [--private-key <private.pem>] [--public-key <public.pem>]",
+        );
         console.log(
           "  boundaryattest attest <artifact> --action-type <type> --private-key <private.pem> [--output <receipt.json>]",
         );

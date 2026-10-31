@@ -34,19 +34,19 @@ External adapters should target the experimental [BoundaryAttest Interop Profile
 
 BoundaryAttest now exposes the v0.2 signing and verification primitives through the public TypeScript API and a minimal exact-artifact CLI. This is the smallest productized path for the handoff pattern validated by external integrations: freeze the final bytes, sign a narrow claim, and verify those same bytes against an independently supplied expected public key.
 
-Generate a dedicated Ed25519 keypair:
+Install BoundaryAttest and generate a dedicated Ed25519 keypair:
 
 ```sh
-openssl genpkey -algorithm Ed25519 -out boundaryattest-private.pem
-openssl pkey -in boundaryattest-private.pem -pubout -out boundaryattest-public.pem
+npm install boundaryattest
+npx boundaryattest keygen
 ```
 
-Build and attest an artifact:
+`keygen` writes `boundaryattest-private.pem` with owner-only permissions and `boundaryattest-public.pem` by default. It refuses to overwrite existing key files. Custom paths are available through `--private-key` and `--public-key`.
+
+Attest an artifact:
 
 ```sh
-npm install
-npm run build
-npm run attest -- ./evidence.json \
+npx boundaryattest attest ./evidence.json \
   --action-type evidence.export \
   --private-key ./boundaryattest-private.pem \
   --output ./evidence.receipt.json
@@ -55,14 +55,14 @@ npm run attest -- ./evidence.json \
 Verify the exact delivered bytes with the expected public key obtained through a trusted channel:
 
 ```sh
-npm run verify:artifact -- ./evidence.json ./evidence.receipt.json \
+npx boundaryattest verify-artifact ./evidence.json ./evidence.receipt.json \
   --public-key ./boundaryattest-public.pem
 ```
 
-The package also exposes a `boundaryattest` executable alias for local/link installs. The verifier prints what passed and explicitly states what the receipt does **not** prove. A passing result establishes expected-key match, Ed25519 signature validity over the v0.2 JCS claim, and exact artifact-byte binding. It does not establish truth, completeness, authorization, signer trustworthiness, runtime integrity, or business outcome.
+The npm package has no runtime dependencies; MCP SDK dependencies used by repository demos stay development-only. The package also retains the `agentreceipt` executable alias for compatibility. The verifier prints what passed and explicitly states what the receipt does **not** prove. A passing result establishes expected-key match, Ed25519 signature validity over the v0.2 JCS claim, and exact artifact-byte binding. It does not establish truth, completeness, authorization, signer trustworthiness, runtime integrity, or business outcome.
 ### Package status
 
-The repository is publish-ready under the npm package name `boundaryattest`, but publishing is a separate release action. CI packs the exact npm tarball, installs it into an empty project, imports the public v0.2 API, and exercises both CLI aliases before a release is made.
+BoundaryAttest is published under the npm package name `boundaryattest`. CI packs the exact npm tarball, installs it into an empty project, verifies that the public package has no runtime dependency tree, imports the public v0.2 API, generates a fresh Ed25519 keypair through the installed CLI, and exercises both CLI aliases before each release.
 
 
 
