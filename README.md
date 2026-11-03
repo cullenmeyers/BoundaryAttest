@@ -54,6 +54,8 @@ npx boundaryattest attest ./evidence.json \
 
 Verify the exact delivered bytes with the expected public key obtained through a trusted channel:
 
+For production use, the relying party also needs an explicit key-distribution, rotation, compromise, and historical-verification policy. See [Key trust and lifecycle](docs/key-trust-lifecycle.md).
+
 ```sh
 npx boundaryattest verify-artifact ./evidence.json ./evidence.receipt.json \
   --public-key ./boundaryattest-public.pem
@@ -147,7 +149,7 @@ Weak use cases include:
 
 Both modes are only as trustworthy as the signer, its key custody, and its runtime. The local demo key in `.agentreceipt` is not production key management.
 
-Real deployments need explicit decisions about key storage, key rotation, custody, and access control. BoundaryAttest does not authenticate callers by itself. Host systems authenticate callers, sessions, services, or agents, then pass caller metadata into BoundaryAttest. BoundaryAttest records that host-supplied metadata and signs it into the receipt.
+Real deployments need explicit decisions about key storage, key rotation, custody, and access control. See [Key trust and lifecycle](docs/key-trust-lifecycle.md) for the boundary between cryptographic verification and deployment trust/governance. BoundaryAttest does not authenticate callers by itself. Host systems authenticate callers, sessions, services, or agents, then pass caller metadata into BoundaryAttest. BoundaryAttest records that host-supplied metadata and signs it into the receipt.
 
 A valid signature indicates that the corresponding signing key produced the receipt over the included fields. It does not establish the business correctness of the action.
 
