@@ -51,6 +51,14 @@ Do not add BoundaryAttest merely because an event can be signed.
 - **Same trust domain:** If the result remains inside one accepted local or user trust boundary, normal logs and storage are usually enough.
 - **Redundant re-signing:** Do not re-sign a stronger source-of-truth record unless the new receipt adds a meaningful evidence-composition, representation-binding, or handoff property.
 
+## BoundaryAttest versus a detached signature
+
+A detached signature over an artifact is the cryptographic floor. If the only requirement is “this expected key committed to these exact bytes,” ordinary artifact signing may already be sufficient; BoundaryAttest should not be presented as stronger cryptography.
+
+The additional value of a structured receipt appears only when the signed claim itself needs machine-readable meaning across systems. Fields such as an action type, event identifier, timestamp, status, role, signer key identifier, and evidence references can let an automated relying party distinguish an export handoff from a review, approval, release sign-off, or other claim without relying on prose or channel-specific convention.
+
+That distinction is a selection rule, not a claim that a structured receipt is always better. Prefer a plain signature when the relying party only needs byte commitment. Prefer a typed receipt when the downstream workflow needs to interpret, route, retain, compare, or apply policy to the meaning of the signed claim.
+
 ## What the signer establishes
 
 `server_attested` means: **this runtime or operator, under this expected signing key, signed this claim.** It does not mean the signer is independent, the claim is objectively true, the runtime was uncompromised, the operator could not fabricate the event, or the key was securely held.
