@@ -62,6 +62,8 @@ npx boundaryattest verify-artifact ./evidence.json ./evidence.receipt.json \
 ```
 
 The npm package has no runtime dependencies; MCP SDK dependencies used by repository demos stay development-only. The package also retains the `agentreceipt` executable alias for compatibility. The verifier prints what passed and explicitly states what the receipt does **not** prove. A passing result establishes expected-key match, Ed25519 signature validity over the v0.2 JCS claim, and exact artifact-byte binding. It does not establish truth, completeness, authorization, signer trustworthiness, runtime integrity, or business outcome.
+
+When the receipt declares `representation: raw_bytes`, verification is intentionally byte-sensitive. The artifact must arrive with the same bytes that were attested: pretty-printing JSON, changing line endings, re-serializing structured data, or otherwise rewriting an equivalent representation changes the digest and must fail verification. If a workflow needs semantic equivalence across re-serialization, it should define and freeze a canonical representation before signing rather than treating transformed bytes as the original artifact.
 ### Package status
 
 BoundaryAttest is published under the npm package name `boundaryattest`. CI packs the exact npm tarball, installs it into an empty project, verifies that the public package has no runtime dependency tree, imports the public v0.2 API, generates a fresh Ed25519 keypair through the installed CLI, and exercises both CLI aliases before each release.
