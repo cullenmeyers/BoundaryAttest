@@ -81,9 +81,12 @@ The following JSON shape is illustrative. Field names are draft and may change.
 
     "trusted_keys": {
       "input_sha256": "sha256:<hex>",
+      "self_referential": false,
       "keys": [
         {
           "key_id": "seal-2026-01",
+          "algo": "ed25519",
+          "public_key": "<32-byte-ed25519-public-key-hex>",
           "role": "seal"
         }
       ]
@@ -100,7 +103,8 @@ The following JSON shape is illustrative. Field names are draft and may change.
     "findings": [
       {
         "severity": "caveat",
-        "code": "anchor_not_validated"
+        "code": "anchor_not_validated",
+        "count": 1
       }
     ],
 
@@ -154,7 +158,7 @@ For the current Obsign verifier, the honest binding is:
 - the source revision the reviewer built from; and
 - SHA-256 of the exact `obsign` binary used.
 
-This matters because verifier behavior can legitimately change across revisions.
+This matters because verifier behavior can legitimately change across revisions. Obsign currently has at least two concrete examples: PR #10 changed how strict mode treats verifier caveats, and a verifier built before a payload type existed can raise `unknown_payload_type` for a pack that a newer verifier accepts. For Obsign today, source revision plus exact binary digest is therefore the strongest available verifier identity binding.
 
 ## Effective options, not command spelling
 
@@ -172,12 +176,19 @@ are meaningful effective options.
 
 ## Trust-anchor binding
 
-If native verification depends on an out-of-band trusted-key file, bind both:
+If native verification depends on an out-of-band trusted-key file, bind all of:
 
-1. SHA-256 of the exact trusted-key input bytes; and
-2. a semantic list of the key IDs and roles used.
+1. SHA-256 of the exact trusted-key input bytes;
+2. whether the verifier treated the run as `self_referential`; and
+3. a semantic list of the effective trusted keys, including `key_id`, algorithm, public-key material, and effective role.
 
-The raw-byte digest preserves the exact verifier input. The inline key list lets another relying party compare the trust anchors semantically even if its equivalent key file uses different whitespace or formatting.
+For current Obsign Ed25519 entries, `public_key` is the 32-byte public key encoded as hex. A `key_id` alone is not an identity: two different key files can reuse the same label while carrying different key material.
+
+For Obsign, an omitted role in the trusted-key input means the effective role is `seal`; the predicate should record that effective role explicitly.
+
+The raw-byte digest preserves the exact verifier input. The inline key material lets another relying party compare the actual anchors semantically even if its equivalent key file uses different whitespace or formatting.
+
+`self_referential` must be recorded explicitly. Obsign derives it from whether the parsed trusted-key list is empty, not merely from whether `--trusted-keys` was present. A supplied file containing `[]` therefore remains self-referential.
 
 The predicate does not assert that those keys were authorized by organizational policy. That remains an external trust decision.
 
@@ -206,24 +217,32 @@ For the current Obsign CLI, exit codes mean:
 | --- | --- |
 | 0 | proven |
 | 1 | invalid |
-| 2 | execution error |
+| 2 | execution error; verification did not produce a verdict |
 | 3 | consistent but unproven |
 
 The predicate should record both the numeric exit code and a stable semantic outcome.
 
-Exit code alone is not enough. For example, exit 1 can result from tampering or from a warning promoted to failure under strict mode. Stable finding codes distinguish those cases.
+There are important interactions:
+
+- A self-referential run raises `keys_not_anchored` as a warning. With `strict: true`, that warning is promoted to failure, so the run exits 1 rather than 3. Exit 3 is reachable for a self-referential run only when strict mode is off.
+- Exit 1 can mean tampering, a warning promoted under strict mode, or an unmet verification requirement promoted to an error. Current examples include `origin_unverified` when origin is required, `identity_not_attested` when attestation is required, and `session_cert_unverified`. The same finding code can have different severity depending on effective options, which is why the predicate records both severity and code.
+- Exit 2 means the pack, trusted-key file, or deployment bundle could not be read or parsed. No verification report/findings verdict is produced. A downstream review predicate must not pair exit 2 with a decision such as `accepted`, because native verification did not complete.
+
+Exit code alone is therefore not enough. Stable finding severity/code pairs distinguish materially different outcomes.
 
 ## Findings
 
-Record stable native finding identifiers as:
+Record stable native finding identifiers as a deterministic, deduplicated set of severity/code pairs, optionally carrying a count:
 
 ```json
-{ "severity": "error | warning | caveat", "code": "<stable-code>" }
+{ "severity": "error | warning | caveat", "code": "<stable-code>", "count": 1 }
 ```
+
+The same code may be raised multiple times in one run. For example, `unknown_payload_type` may be raised once per affected record. To keep equivalent verifier runs comparable, the predicate should collapse repeated identical `(severity, code)` pairs into one entry and record the multiplicity in `count`.
 
 Do not treat human-readable finding messages as stable protocol fields unless the native verifier explicitly guarantees them.
 
-For current Obsign behavior, finding codes are intended for scripts/CI and are the appropriate semantic identifiers.
+For current Obsign behavior, finding codes are intended for scripts/CI and are the appropriate semantic identifiers. Severity is also material: some codes can be warnings or errors depending on the effective verification options.
 
 A digest of the full JSON verification report may be included as an optional archival reference, but it is not sufficient on its own if that report format is not versioned and self-describing.
 
@@ -242,7 +261,7 @@ A native exit code of 0 does not silently upgrade those caveats into completed c
 
 For each material caveat, the predicate should state whether the reviewer actually performed the required out-of-band check. If not performed, the limitation should remain visible in `not_proven`.
 
-An optional `evidence_ref` may bind retained evidence of the out-of-band check without prescribing its format.
+`evidence_ref` is required whenever `performed: true`. Otherwise `performed` would be an unbound assertion inside a predicate whose other material verification inputs are bound. The reference may identify retained evidence without prescribing its format.
 
 ## Review semantics
 
@@ -328,9 +347,9 @@ native evidence
 This draft intentionally leaves several questions open for external review:
 
 1. Which fields belong in a reusable cross-system predicate versus a source-specific profile?
-2. Should out-of-band checks require retained evidence references when marked performed?
-3. Should the review decision vocabulary be standardized or always application-defined?
-4. Is a source revision + binary digest sufficient verifier identity when no stable version is emitted?
+2. Which evidence-reference formats should be accepted for performed out-of-band checks? This draft now requires an `evidence_ref` whenever `performed: true`.
+3. How should application profiles define their own review-decision vocabulary? This draft keeps `decision` application-defined.
+4. Beyond source revision + binary digest, is any additional verifier identity needed when no stable version is emitted?
 5. Does an existing envelope such as DSSE/in-toto make BoundaryAttest's own envelope unnecessary for this use case?
 6. Which fields must be mandatory before a downstream claim is safe to automate against?
 
