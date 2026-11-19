@@ -158,7 +158,7 @@ For the current Obsign verifier, the honest binding is:
 - the source revision the reviewer built from; and
 - SHA-256 of the exact `obsign` binary used.
 
-This matters because verifier behavior can legitimately change across revisions. Obsign currently has at least two concrete examples: PR #10 changed how strict mode treats verifier caveats, and a verifier built before a payload type existed can raise `unknown_payload_type` for a pack that a newer verifier accepts. For Obsign today, source revision plus exact binary digest is therefore the strongest available verifier identity binding.
+This matters because verifier behavior can legitimately change across revisions. Obsign currently has at least three concrete examples: PR #10 changed how strict mode treats verifier caveats; a verifier built before a payload type existed can raise `unknown_payload_type` for a pack that a newer verifier accepts; and PR #11 changed an unsealed or empty pack from exit 0 to exit 3. For Obsign today, source revision plus exact binary digest is therefore the strongest available verifier identity binding.
 
 ## Effective options, not command spelling
 
@@ -186,6 +186,8 @@ For current Obsign Ed25519 entries, `public_key` is the 32-byte public key encod
 
 For Obsign, an omitted role in the trusted-key input means the effective role is `seal`; the predicate should record that effective role explicitly.
 
+Current Obsign also rejects a `key_id` bound to two different keys as `conflicting_key_id`, independent of entry order. That lets the predicate treat each inline `key_id` as naming one effective key only after native verification has ruled out conflicting bindings.
+
 The raw-byte digest preserves the exact verifier input. The inline key material lets another relying party compare the actual anchors semantically even if its equivalent key file uses different whitespace or formatting.
 
 `self_referential` must be recorded explicitly. Obsign derives it from whether the parsed trusted-key list is empty, not merely from whether `--trusted-keys` was present. A supplied file containing `[]` therefore remains self-referential.
@@ -207,7 +209,9 @@ For the current Obsign verifier:
 }
 ```
 
-If the pack embeds its own deployment bundle, an additionally supplied `--deployment-bundle` is ignored. The predicate must not imply that an ignored input affected the verdict.
+If the pack embeds its own deployment bundle, that embedded bundle is the effective source for verification semantics. The predicate should derive `deployment_bundle.source` from the pack/effective verification path rather than from the JSON report, because the report does not record bundle source.
+
+A malformed `--deployment-bundle` argument is still an execution error even when the pack embeds its own bundle, because the CLI attempts to read/parse the supplied file before the verifier decides whether the embedded bundle is authoritative. The predicate must therefore distinguish the effective bundle source from invalid command-line inputs that prevented verification from completing.
 
 ## Native outcome
 
@@ -224,11 +228,20 @@ The predicate should record both the numeric exit code and a stable semantic out
 
 There are important interactions:
 
-- A self-referential run raises `keys_not_anchored` as a warning. With `strict: true`, that warning is promoted to failure, so the run exits 1 rather than 3. Exit 3 is reachable for a self-referential run only when strict mode is off.
-- Exit 1 can mean tampering, a warning promoted under strict mode, or an unmet verification requirement promoted to an error. Current examples include `origin_unverified` when origin is required, `identity_not_attested` when attestation is required, and `session_cert_unverified`. The same finding code can have different severity depending on effective options, which is why the predicate records both severity and code.
-- Exit 2 means the pack, trusted-key file, or deployment bundle could not be read or parsed. No verification report/findings verdict is produced. A downstream review predicate must not pair exit 2 with a decision such as `accepted`, because native verification did not complete.
+- `--strict` does not change finding severity in the report. It changes only the process exit code. For example, `keys_not_anchored` remains a `warning`; strict mode makes that warning sufficient for exit 1.
+- Exit 1 can mean tampering, any error finding, or a warning when `strict: true`. Current requirement-sensitive examples include `origin_unverified` and `session_cert_unverified` when origin is required, and `identity_not_attested` when attestation is required.
+- Exit 3 means the run is consistent but unproven. For current Obsign behavior, this includes a non-strict self-referential run and packs with `unsealed_records` or `empty_pack`.
+- Exit 2 means verification did not produce a report/verdict. It covers read/parse failures and bad command-line invocation. A malformed supplied `--deployment-bundle` exits 2 even if the pack embeds its own bundle. By contrast, a malformed trusted-key entry such as an unknown algorithm or bad key hex is represented as an `invalid_key` error and exits 1.
 
-Exit code alone is therefore not enough. Stable finding severity/code pairs distinguish materially different outcomes.
+For current Obsign behavior, the exit code can be recomputed from the signed predicate as a consistency check:
+
+1. exit 1 if any finding has severity `error`, or if `strict: true` and any finding has severity `warning`;
+2. otherwise exit 3 if `self_referential: true` or findings include `unsealed_records` or `empty_pack`;
+3. otherwise exit 0.
+
+An accepted downstream decision should normally require `strict: true`. If a profile deliberately permits acceptance after a non-strict exit 0 with warnings, those warnings must remain visible in the signed semantics and their limitations should be carried into `not_proven`.
+
+Exit code alone is therefore not enough. Stable finding severity/code pairs plus the effective options distinguish materially different outcomes.
 
 ## Findings
 
@@ -244,9 +257,9 @@ Do not treat human-readable finding messages as stable protocol fields unless th
 
 For current Obsign behavior, finding codes are intended for scripts/CI and are the appropriate semantic identifiers. Severity is also material: some codes can be warnings or errors depending on the effective verification options.
 
-A digest of the full JSON verification report may be included as an optional archival reference, but it is not sufficient on its own if that report format is not versioned and self-describing.
+A digest of the JSON verification report may be included as an optional archival reference, but it is not sufficient on its own if that report format is not versioned and self-describing.
 
-If `verification_report.sha256` is present, it should cover the exact retained report bytes and the report should actually be archived.
+For current Obsign behavior, the JSON report does **not** record the effective options, verifier build identity, or deployment-bundle source. Those must remain explicit predicate fields. If `verification_report.sha256` is present, hash the exact `--json` stdout bytes only, retain those exact bytes, and set `archived: true`. Do not mix stderr or reconstructed metadata into that digest.
 
 ## Caveats and out-of-band checks
 
