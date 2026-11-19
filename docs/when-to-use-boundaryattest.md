@@ -83,6 +83,32 @@ The current `previous_receipt_hash` linear chain works best with a real, coordin
 
 Higher-level future constructions might use authoritative ordered event views, canonical event digests, Merkle or root commitments, periodic signed checkpoints, external anchoring, or a real sequencer. BoundaryAttest does not currently specify or implement those constructions.
 
+## Keep review/reliance distinct from custody
+
+A downstream review claim and a custody transfer are different predicates and should not share one generic "acceptance" rule.
+
+- **Review / reliance:** "I evaluated evidence digest D and this is my verdict." Multiple independent relying parties can make this claim about the same subject. The claims are plural and append-only; they do not compete for ownership of the digest.
+- **Assume custody / responsibility:** "I am now the responsible holder of the work behind digest D." This can be singular and stateful because responsibility is scarce. A handoff protocol may legitimately need concurrency control, first-writer-wins, sequencing, or another authoritative ownership rule.
+
+Do not make review cardinality depend on a custody rule. If two organizations review the same evidence, both review claims can stand. If only one organization may hold responsibility for the next step, model that as a separate custody state transition.
+
+The current evidence-review predicate is a **review/reliance** profile. It is not a custody-transfer protocol and does not define exclusive ownership, claim arbitration, or first-writer-wins semantics.
+
+A useful three-layer model is:
+
+```text
+native producer evidence
+  -> authoritative evidence about the original action/result
+
+custody / handoff state
+  -> who currently holds responsibility for the work
+
+review / reliance attestations
+  -> what each downstream party independently concluded about the same evidence
+```
+
+All three may point at the same stable evidence digest without rewriting one another.
+
 ## Keep decisions and execution distinct
 
 A governance or policy decision is not always faithfully represented by only `status: "denied"`. Domain evidence may need a verdict, reason code, policy reference and version, required capabilities, relevant inputs, participant votes, narrowed versus broad permission semantics, dissent, overridden alternatives, timestamps or sequence, later adjudication, and execution state.

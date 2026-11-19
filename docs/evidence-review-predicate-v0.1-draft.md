@@ -288,6 +288,20 @@ Typical fields:
 
 These values require an application/profile contract. A generic verifier cannot infer their organizational meaning.
 
+## Cardinality: review claims are plural
+
+This predicate is non-exclusive.
+
+Two or more downstream parties may review the same subject digest and produce different signed review predicates over that same evidence. Those statements coexist; one does not invalidate, overwrite, or win over another merely because it was created first.
+
+This is intentionally different from a custody-transfer claim such as:
+
+> "I am now the responsible holder of the work behind digest D."
+
+Custody can require singular ownership and concurrency rules because responsibility is being transferred. Review/reliance does not. A review predicate says only what one relying party concluded about its subject.
+
+Do not use this profile to implement first-writer-wins acceptance, exclusive handoff ownership, or current-custodian state. Those semantics require a separate custody/handoff profile or authoritative workflow system.
+
 ## Signer trust
 
 The signed envelope must be verified against a downstream signer key obtained independently from the predicate and subject artifact.
