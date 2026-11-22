@@ -155,7 +155,7 @@ A downstream claim should identify the verifier actually run, not merely the pro
 
 Where the verifier emits a stable self-identifying version, record that version. Where it does not, bind an immutable source revision plus the digest of the exact binary that executed.
 
-For the current Obsign verifier, the honest binding is:
+For the pinned Obsign verifier, the honest binding is:
 
 - the source revision the reviewer built from; and
 - SHA-256 of the exact `obsign` binary used.
@@ -168,7 +168,7 @@ For the pinned Obsign mapping in this document, source revision plus exact binar
 
 Record the effective semantic options rather than every command-line flag as typed.
 
-For current Obsign behavior:
+For the pinned Obsign behavior:
 
 - `strict`
 - `require_origin`
@@ -186,11 +186,11 @@ If native verification depends on an out-of-band trusted-key file, bind all of:
 2. whether the verifier treated the run as `self_referential`; and
 3. a semantic list of the effective trusted keys, including `key_id`, algorithm, public-key material, and effective role.
 
-For current Obsign Ed25519 entries, `public_key` is the 32-byte public key encoded as hex. A `key_id` alone is not an identity: two different key files can reuse the same label while carrying different key material.
+For the pinned Obsign verifier's Ed25519 entries, `public_key` is the 32-byte public key encoded as hex. A `key_id` alone is not an identity: two different key files can reuse the same label while carrying different key material.
 
 For Obsign, an omitted role in the trusted-key input means the effective role is `seal`; the predicate should record that effective role explicitly.
 
-Current Obsign also rejects a `key_id` bound to two different keys as `conflicting_key_id`, independent of entry order. That lets the predicate treat each inline `key_id` as naming one effective key only after native verification has ruled out conflicting bindings.
+The pinned Obsign verifier also rejects a `key_id` bound to two different keys as `conflicting_key_id`, independent of entry order. That lets the predicate treat each inline `key_id` as naming one effective key only after native verification has ruled out conflicting bindings.
 
 The raw-byte digest preserves the exact verifier input. The inline key material lets another relying party compare the actual anchors semantically even if its equivalent key file uses different whitespace or formatting.
 
@@ -202,7 +202,7 @@ The predicate does not assert that those keys were authorized by organizational 
 
 When a verifier can obtain configuration from either the artifact itself or an externally supplied file, the predicate must record which source actually governed verification.
 
-For the current Obsign verifier:
+For the pinned Obsign verifier:
 
 ```json
 {
@@ -241,7 +241,7 @@ There are important interactions:
 - Exit 3 means the run is consistent but unproven. For the pinned Obsign behavior, this includes a non-strict self-referential run and packs with `unsealed_records` or `empty_pack`.
 - Exit 2 means verification did not produce a report/verdict. It covers read/parse failures, bad command-line invocation, a malformed supplied `--deployment-bundle` even when the pack embeds its own bundle, and refusal of an input pack, keys file, or bundle over 1 GiB before it is read. By contrast, a malformed trusted-key entry such as an unknown algorithm or bad key hex is represented as an `invalid_key` error and exits 1.
 
-For current Obsign behavior, the exit code can be recomputed from the signed predicate as a consistency check:
+For the pinned Obsign behavior, the exit code can be recomputed from the signed predicate as a consistency check:
 
 1. exit 1 if any finding has severity `error`, or if `strict: true` and any finding has severity `warning`;
 2. otherwise exit 3 if `self_referential: true` or findings include `unsealed_records` or `empty_pack`;
@@ -265,7 +265,7 @@ The same code may be raised multiple times in one run. For example, `unknown_pay
 
 Do not treat human-readable finding messages as stable protocol fields unless the native verifier explicitly guarantees them.
 
-For current Obsign behavior, finding codes are intended for scripts/CI and are the appropriate semantic identifiers. Severity is also material: some codes can be warnings or errors depending on the effective verification options.
+For the pinned Obsign behavior, finding codes are intended for scripts/CI and are the appropriate semantic identifiers. Severity is also material: some codes can be warnings or errors depending on the effective verification options.
 
 A digest of the JSON verification report may be included as an optional archival reference, but it is not sufficient on its own if that report format is not versioned and self-describing.
 
