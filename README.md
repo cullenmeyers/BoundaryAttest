@@ -1,12 +1,10 @@
 # BoundaryAttest
 
-BoundaryAttest creates portable signed attestations for consequential agent actions crossing trust boundaries.
+BoundaryAttest is a small signing and verification toolkit for portable, independently attributable claims about actions, results, evidence, and handoffs.
 
-Signed boundary records for agent actions.
+Crossing a trust boundary does **not** by itself justify creating another signed object. Prefer native signed evidence when it already expresses the relevant actor's claim. Use BoundaryAttest when a distinct actor has a distinct assertion to make and no suitable native signed object already carries that assertion.
 
-Normal logs and OpenTelemetry are usually enough for internal debugging and monitoring. BoundaryAttest is for cases where a portable attestation may need to be checked later: multi-agent workflows, org-to-org workflows, delegated agents, business record changes, document publishing, commerce/dispute scenarios, and high-value or hard-to-reverse actions.
-
-BoundaryAttest is intended for selected cross-boundary evidence, not for signing every agent or tool event. Use the [use and non-use guide](docs/when-to-use-boundaryattest.md) to decide whether a portable signed object materially improves trust at a boundary.
+Normal logs and OpenTelemetry are usually enough for internal debugging and monitoring. BoundaryAttest is intended for selected evidence and assertion seams, not for signing every agent or tool event. Use the [use and non-use guide](docs/when-to-use-boundaryattest.md) to test for a real semantic gap before adding a receipt.
 
 When an agent calls a tool, BoundaryAttest can:
 
@@ -125,9 +123,11 @@ These tools run only inside the local MCP SDK demo. They do not touch real files
 
 BoundaryAttest is not a replacement for logs, tracing, Git history, cloud audit trails, provider audit logs, or approval systems. Those systems are still the right source of truth for ordinary debugging, platform operations, access history, and workflow enforcement.
 
-Inside one organization or trust domain, ordinary logs may already be enough. BoundaryAttest matters when a signed claim about a consequential agent action needs to travel outside the original runtime, vendor, app, or logging system. It creates a portable attestation that another party can check later without relying only on the original system's logs.
+Inside one organization or trust domain, ordinary logs may already be enough. Crossing into another organization is still not sufficient by itself. The stronger trigger is a **new attributable assertion** that the native evidence does not already express—for example, an external executor signing what it verified and performed, or an independent reviewer signing its own determination about immutable source evidence.
 
-The value of that attestation depends on who signs it, who holds the signing keys, what claim is signed, who the claim is meant to protect, and what the signature does and does not establish.
+If the source system already emits appropriate asymmetric evidence for that same actor and claim, verify the native object directly rather than wrapping it. If the ecosystem already has a suitable signed envelope, BoundaryAttest can define or map claim semantics at the profile level instead of introducing another container.
+
+The value of any BoundaryAttest assertion depends on who signs it, who holds the signing keys, what exact evidence and profile the claim covers, what remained unresolved, when the determination was made, when it remains applicable, and what the signature does and does not establish. See the draft [verification assertion profile](docs/verification-assertion-profile-v0.1-draft.md).
 
 Strong use cases include:
 
@@ -165,7 +165,7 @@ Diagnostic and read-only calls can still be signed if the host system needs that
 
 ## Interop and schema direction
 
-BoundaryAttest is currently a TypeScript implementation and local-first proof of concept. The long-term value may be a stable receipt envelope and signing input that other systems can emit, store, or verify.
+BoundaryAttest is currently a TypeScript implementation and local-first proof of concept. The core Interop v0.2 envelope remains a useful fallback where no appropriate native signed object exists, but BoundaryAttest should not compete with native envelopes merely for portability. The longer-term value may be stable assertion profiles and verification semantics that can either ride in BoundaryAttest's envelope or map onto another ecosystem's native signed response format.
 
 BoundaryAttest was previously called AgentReceipt during early PoC work. The npm package is now prepared under `boundaryattest`; the `agentreceipt` CLI alias, `.agentreceipt` storage directory, and legacy exported API names remain for compatibility.
 
