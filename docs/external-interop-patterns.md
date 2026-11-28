@@ -103,10 +103,34 @@ The relying party must obtain the expected Ed25519 public key independently. A p
 
 This pattern validates a product-shaped BoundaryAttest seam: a source system already has its own grounding, validation, and native identifiers, but the final evidence artifact becomes independently verifiable when it deliberately leaves that system. The adapter preserves the source system's semantics and adds only the missing portable exporter commitment.
 
+## Pattern 14: Grantex external executor owns the action/effect claim
+
+[Grantex Issue #2109](https://github.com/mishrasanjeev/grantex/issues/2109) tested whether a separately operated executor should sign its own receipt after verifying Grantex-issued authority. The maintainer's answer was explicit: the authority issuer and executor should each sign their own claim.
+
+Grantex remains authoritative for the grant, delegation chain, decisions, and revocation history. A Grantex tenant can send tool-call evidence back into the evidence package, but that record is tenant-asserted; the package signature establishes that Grantex received the statement, not that an independently operated executor made it. A non-tenant executor may also be able to verify a grant without having the tenant credentials needed to write the record back directly.
+
+That leaves a distinct executor-owned assertion: which grant it checked, how and when it checked revocation, what canonical input/output it observed, and whether the outcome was succeeded, failed, or unknown. The maintainer specifically recommended grant id + digest rather than carrying the token, revocation method + check time, SHA-256 over RFC 8785 JCS for structured input/output digests, and an `unknown` outcome for timeouts.
+
+The draft [Grantex external-executor receipt profile](grantex-external-executor-receipt-profile-v0.1-draft.md) records this as a profile-level composition. BoundaryAttest does not wrap or replace Grantex authority evidence; it supplies a fallback signed object only for the executor's separate claim.
+
+## Pattern 15: Trust Tasks — semantic gap before artifact gap
+
+[Trust Tasks Issue #1403](https://github.com/trustoverip/dtgwg-trust-tasks-tf/issues/1403) tested whether a retained signed response should be wrapped in a new attestation when it crosses to another relying party. The maintainers pushed back on the artifact-first framing.
+
+Their rule is stricter: crossing a trust boundary does not by itself require another signed object. First ask whether the existing signed response and governing profile already let the relying party establish the assertion's scope, evidence, verification rules, unresolved checks, and applicability. If the missing information can be expressed in the existing response semantics, a second envelope is unnecessary.
+
+They also tested the independent-review case. Their preferred model is for evaluator B to make B's own signed task response with the original evidence as its subject, rather than introducing another generic envelope. Multiple evaluators can assess the same immutable source independently.
+
+The discussion identified a separate unresolved problem: **document lifetime and claim applicability are not the same thing**. A signed response may remain authentic and worth retaining even after the determination it carries should no longer be relied upon without re-evaluation. The draft [verification assertion profile](verification-assertion-profile-v0.1-draft.md) therefore separates document authenticity, determination semantics, evidence as-of state, unresolved checks, and applicability/revalidation conditions.
+
+This is negative evidence against positioning BoundaryAttest as a universal signed envelope, and positive evidence for profile-level assertion semantics that can ride either in BoundaryAttest's Interop envelope or in a native ecosystem's signed response format.
+
 ## What these patterns have in common
 
-- A small signed claim crosses a system or trust boundary.
-- When native asymmetric evidence already covers that portable claim, verify it directly rather than wrapping it with a second BoundaryAttest signature; use BoundaryAttest only for a distinct handoff claim if one exists.
+- A distinct actor has a distinct claim that must remain attributable; crossing a system or trust boundary alone is insufficient.
+- When native asymmetric evidence already covers that actor and claim, verify it directly rather than wrapping it with a second BoundaryAttest signature.
+- When an existing signed envelope can carry the needed semantics, prefer a profile or mapping over a parallel BoundaryAttest container.
+- When no suitable native signed object exists, BoundaryAttest's Interop envelope can carry the missing actor-owned assertion.
 - The expected public key comes from trusted verifier configuration, not from an untrusted receipt alone.
 - Artifact consumers recompute digests over the exact bytes they will use.
 - Native hashes and identifiers keep their source-system meaning; BoundaryAttest should not repurpose them as artifact digests when a separate exact-byte binding is needed.
