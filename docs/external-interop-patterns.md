@@ -111,7 +111,7 @@ Grantex remains authoritative for the grant, delegation chain, decisions, and re
 
 That leaves a distinct executor-owned assertion: which grant it checked, how and when it checked revocation, what canonical input/output it observed, and whether the outcome was succeeded, failed, or unknown. The maintainer specifically recommended grant id + digest rather than carrying the token, revocation method + check time, SHA-256 over RFC 8785 JCS for structured input/output digests, and an `unknown` outcome for timeouts.
 
-The draft [Grantex external-executor receipt profile](grantex-external-executor-receipt-profile-v0.1-draft.md) records this as a profile-level composition. BoundaryAttest does not wrap or replace Grantex authority evidence; it supplies a fallback signed object only for the executor's separate claim.
+The draft [Grantex external-executor receipt profile](grantex-external-executor-receipt-profile-v0.1-draft.md) records this as a profile-level composition, and the [runnable synthetic fixture](../examples/grantex-external-executor-v0.1/) exercises the valid path plus grant/input/output binding failures, forbidden token carriage, and timeout-style `outcome: unknown`. BoundaryAttest does not wrap or replace Grantex authority evidence; it supplies a fallback signed object only for the executor's separate claim.
 
 ## Pattern 15: Trust Tasks — semantic gap before artifact gap
 
