@@ -2,6 +2,8 @@
 
 Status: experimental, documentation-only adapter profile. This does not change BoundaryAttest Interop v0.2 or Grantex.
 
+Runnable synthetic fixture: [`examples/grantex-external-executor-v0.1/`](../examples/grantex-external-executor-v0.1/).
+
 ## Why this profile exists
 
 Grantex owns delegated authority evidence. An independently operated executor may be able to verify a Grantex grant without being the Grantex tenant that can write authoritative tenant records back into the evidence package.
