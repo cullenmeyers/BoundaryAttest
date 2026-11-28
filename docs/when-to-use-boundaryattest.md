@@ -1,33 +1,45 @@
 # When to use BoundaryAttest
 
-BoundaryAttest is for selected evidence crossings, not for signing every agent or tool event. Use this practical test:
+BoundaryAttest is for selected attributable claims, not for signing every agent or tool event. Use this practical test:
 
-> Does a portable signed evidence object materially improve trust at this boundary?
+> Is a distinct actor making a distinct claim that the authoritative or native evidence does not already express?
 
-The strongest fit is usually a selected action, decision, result, artifact, or handoff that leaves its originating trust domain, cannot simply be checked against stronger authoritative evidence, cannot trivially be fetched and recomputed, and benefits from preserving an exact historical representation bound to an expected signer. These are selection factors, not an absolute rule.
+Crossing a trust boundary is a useful signal, but it is not the deciding rule. A second signed object is justified only when it carries a separate assertion or evidentiary commitment that should remain attributable to its own signer.
 
 ## Two-minute decision flow
 
 ```text
-Does the evidence leave its native trust domain?
-    no  -> probably use normal logs or storage
+Does another actor need to make a distinct attributable claim?
+    no  -> use the native evidence/log/record
     yes
      |
-Is stronger authoritative evidence already available?
-    yes -> prefer or reference that evidence
+Can the native system or ecosystem already express and sign that claim?
+    yes -> use the native signed object; do not wrap it just for portability
     no
      |
-Can the receiver independently fetch and deterministically recompute the result?
-    yes -> a receipt may add little unless exact historical freezing matters
+Can an existing signed envelope carry the missing semantics?
+    yes -> prefer a profile/mapping over a new envelope
     no
      |
-Does preserving the exact signer/evidence binding matter?
+Does BoundaryAttest's narrow signed claim add a real evidence property?
     yes -> BoundaryAttest may be a good fit
     no  -> it is probably unnecessary
 
-Separately: do you need completeness or full-history guarantees?
-    yes -> an individual receipt is insufficient
+Then ask:
+- Is stronger authoritative evidence already available?
+- Can the receiver fetch and deterministically recompute the result?
+- Does exact signer/evidence binding or historical freezing matter?
+- Do you need completeness or full-history guarantees?
+  If yes, an individual receipt is insufficient.
 ```
+
+## Semantic gap before artifact gap
+
+Do not start with “this crossed a boundary, therefore sign another receipt.” Start with the claim the relying party actually needs.
+
+A new object is justified when a new actor makes a claim that the existing immutable evidence cannot truthfully contain—for example, an external executor saying “I verified this authority and performed this action.” If an existing response/profile can already express that actor's claim, improve or use those semantics instead of introducing a parallel container.
+
+For verification and review assertions, distinguish the signed document from the determination it carries. A document can remain authentic and worth retaining after its verdict has become stale or inapplicable. Profiles should state the evidence assessed, verification rules, unresolved checks, evaluation time, and applicability/revalidation conditions. See [verification assertion profile v0.1 draft](verification-assertion-profile-v0.1-draft.md).
 
 ## Good fits
 
@@ -137,7 +149,9 @@ Later edits, migrations, sanitization, projections, and transformations should n
 
 | Situation | Fit | Reason |
 |---|---|---|
-| Incident report or artifact exported to another organization | Strong | Preserves an exact cross-boundary handoff claim |
+| New actor makes a distinct claim not present in native evidence | Strong | Keeps the new assertion attributable without rewriting the source evidence |
+| External executor verifies authority and performs an action with no native executor-signed record | Strong | Separates authority evidence from the executor's own action/effect claim |
+| Incident report or artifact exported to another organization | Conditional | Strong only when the export adds a distinct signer/artifact-binding claim; boundary crossing alone is insufficient |
 | Consequential cross-system action result with no authoritative external record | Strong | Gives the receiver portable, attributable evidence |
 | Local analysis only | Weak | Normal logs or storage usually suffice |
 | Authoritative system already exposes durable evidence for the action | Weak | Prefer or reference the stronger source |
